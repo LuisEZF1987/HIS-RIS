@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.encounter import Encounter
@@ -42,9 +42,9 @@ class Patient(Base):
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     date_of_birth: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    gender: Mapped[Optional[Gender]] = mapped_column(Enum(Gender), nullable=True)
+    gender: Mapped[Optional[Gender]] = mapped_column(Enum(Gender, values_callable=enum_values), nullable=True)
     dni: Mapped[Optional[str]] = mapped_column(String(30), unique=True, nullable=True, index=True, comment="National ID")
-    blood_type: Mapped[Optional[BloodType]] = mapped_column(Enum(BloodType), nullable=True)
+    blood_type: Mapped[Optional[BloodType]] = mapped_column(Enum(BloodType, values_callable=enum_values), nullable=True)
     allergies: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

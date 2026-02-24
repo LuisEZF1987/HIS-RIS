@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.core.middleware import RequestIDMiddleware, SecurityHeadersMiddleware, TimingMiddleware
+import app.db.base  # noqa: F401 — registers all ORM models with SQLAlchemy mapper
 from app.db.session import engine
 from app.routers import admin, adt, auth, dicom, fhir, hl7, orthanc, reports, ris, schedule
 

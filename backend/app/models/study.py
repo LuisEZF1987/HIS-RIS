@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.order import ImagingOrder
@@ -36,7 +36,7 @@ class ImagingStudy(Base):
     study_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     station_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     status: Mapped[StudyStatus] = mapped_column(
-        Enum(StudyStatus), nullable=False, default=StudyStatus.pending, index=True
+        Enum(StudyStatus, values_callable=enum_values), nullable=False, default=StudyStatus.pending, index=True
     )
     orthanc_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     received_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

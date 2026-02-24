@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.config import get_settings
 from app.core.security import get_password_hash
+import app.db.base  # noqa: F401 — registers all models with SQLAlchemy
 from app.models.user import User, UserRole
 from app.models.schedule import Resource, ResourceType
 

@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import DateTime, Enum, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 
 class HL7Direction(str, enum.Enum):
@@ -38,12 +38,12 @@ class HL7Message(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     message_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    direction: Mapped[HL7Direction] = mapped_column(Enum(HL7Direction), nullable=False, index=True)
+    direction: Mapped[HL7Direction] = mapped_column(Enum(HL7Direction, values_callable=enum_values), nullable=False, index=True)
     sending_facility: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     receiving_facility: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     message_control_id: Mapped[Optional[str]] = mapped_column(String(50), unique=True, nullable=True)
     raw_message: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[HL7Status] = mapped_column(Enum(HL7Status), nullable=False, default=HL7Status.pending, index=True)
+    status: Mapped[HL7Status] = mapped_column(Enum(HL7Status, values_callable=enum_values), nullable=False, default=HL7Status.pending, index=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     patient_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

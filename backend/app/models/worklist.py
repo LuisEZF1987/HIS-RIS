@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.order import ImagingOrder
@@ -39,7 +39,7 @@ class DicomWorklistEntry(Base):
     requested_procedure_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     referring_physician: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[WorklistStatus] = mapped_column(
-        Enum(WorklistStatus), nullable=False, default=WorklistStatus.active, index=True
+        Enum(WorklistStatus, values_callable=enum_values), nullable=False, default=WorklistStatus.active, index=True
     )
     wl_file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True, comment="Path to .wl DICOM file")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

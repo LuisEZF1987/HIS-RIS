@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.patient import Patient
@@ -62,16 +62,16 @@ class ImagingOrder(Base):
     accession_number: Mapped[str] = mapped_column(
         String(50), unique=True, nullable=False, index=True, default=generate_accession_number
     )
-    modality: Mapped[Modality] = mapped_column(Enum(Modality), nullable=False)
+    modality: Mapped[Modality] = mapped_column(Enum(Modality, values_callable=enum_values), nullable=False)
     procedure_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     procedure_description: Mapped[str] = mapped_column(String(500), nullable=False)
     body_part: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     laterality: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, comment="L/R/B")
     priority: Mapped[OrderPriority] = mapped_column(
-        Enum(OrderPriority), nullable=False, default=OrderPriority.routine
+        Enum(OrderPriority, values_callable=enum_values), nullable=False, default=OrderPriority.routine
     )
     status: Mapped[OrderStatus] = mapped_column(
-        Enum(OrderStatus), nullable=False, default=OrderStatus.requested, index=True
+        Enum(OrderStatus, values_callable=enum_values), nullable=False, default=OrderStatus.requested, index=True
     )
     clinical_indication: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     special_instructions: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

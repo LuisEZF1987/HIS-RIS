@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.patient import Patient
@@ -36,7 +36,7 @@ class Resource(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    resource_type: Mapped[ResourceType] = mapped_column(Enum(ResourceType), nullable=False)
+    resource_type: Mapped[ResourceType] = mapped_column(Enum(ResourceType, values_callable=enum_values), nullable=False)
     modality: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     ae_title: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, comment="DICOM AE Title")
     location: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -59,7 +59,7 @@ class Appointment(Base):
     order_id: Mapped[Optional[int]] = mapped_column(ForeignKey("imaging_orders.id"), unique=True, nullable=True, index=True)
     resource_id: Mapped[Optional[int]] = mapped_column(ForeignKey("resources.id"), nullable=True, index=True)
     status: Mapped[AppointmentStatus] = mapped_column(
-        Enum(AppointmentStatus), nullable=False, default=AppointmentStatus.proposed, index=True
+        Enum(AppointmentStatus, values_callable=enum_values), nullable=False, default=AppointmentStatus.proposed, index=True
     )
     start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

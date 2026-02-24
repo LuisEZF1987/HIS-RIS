@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.patient import Patient
@@ -35,10 +35,10 @@ class Encounter(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), nullable=False, index=True)
     encounter_type: Mapped[EncounterType] = mapped_column(
-        Enum(EncounterType), nullable=False, default=EncounterType.outpatient
+        Enum(EncounterType, values_callable=enum_values), nullable=False, default=EncounterType.outpatient
     )
     status: Mapped[EncounterStatus] = mapped_column(
-        Enum(EncounterStatus), nullable=False, default=EncounterStatus.planned
+        Enum(EncounterStatus, values_callable=enum_values), nullable=False, default=EncounterStatus.planned
     )
     admission_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     discharge_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

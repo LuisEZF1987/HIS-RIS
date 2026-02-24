@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base, enum_values
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -29,7 +29,7 @@ class RadiologyReport(Base):
     study_id: Mapped[int] = mapped_column(ForeignKey("imaging_studies.id"), unique=True, nullable=False, index=True)
     radiologist_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     status: Mapped[ReportStatus] = mapped_column(
-        Enum(ReportStatus), nullable=False, default=ReportStatus.draft, index=True
+        Enum(ReportStatus, values_callable=enum_values), nullable=False, default=ReportStatus.draft, index=True
     )
     findings: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     impression: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

@@ -46,17 +46,15 @@ services:
     image: orthancteam/orthanc:24.3.3
     container_name: his_ris_orthanc
     restart: unless-stopped
-    environment:
-      ORTHANC_JSON: "/etc/orthanc/orthanc.json"
     volumes:
       - ./infrastructure/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
       - orthanc_data:/var/lib/orthanc/db
       - worklist_data:/var/lib/orthanc/worklists
     ports:
-      - "8042:8042"   # HTTP REST API
-      - "4242:4242"   # DICOM SCP
+      - "8043:8042"   # HTTP REST API  (8042 ocupado por otro Orthanc)
+      - "4243:4242"   # DICOM SCP      (4242 ocupado por otro contenedor)
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8042/system"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,base64; req=urllib.request.Request('http://localhost:8042/system'); req.add_header('Authorization','Basic '+base64.b64encode(b'orthanc:orthanc').decode()); urllib.request.urlopen(req)\" 2>/dev/null || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -83,7 +81,7 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       - ENVIRONMENT=${ENVIRONMENT:-development}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:80}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
       - INSTITUTION_NAME=${INSTITUTION_NAME:-Hospital General}
     volumes:
       - worklist_data:/var/lib/orthanc/worklists
@@ -96,9 +94,9 @@ services:
       redis:
         condition: service_healthy
       orthanc:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" 2>/dev/null || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -172,7 +170,7 @@ services:
     volumes:
       - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "80:80"
+      - "8080:80"     # Puerto 80 ocupado por otro contenedor
     depends_on:
       - api
       - frontend
