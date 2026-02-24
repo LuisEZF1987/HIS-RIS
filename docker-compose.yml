@@ -1,0 +1,190 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL ───────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: his_ris_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-his_ris}
+      POSTGRES_USER: ${POSTGRES_USER:-his_ris_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-his_ris_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-his_ris_user} -d ${POSTGRES_DB:-his_ris}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - his_ris_net
+
+  # ─── Redis ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: his_ris_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - his_ris_net
+
+  # ─── Orthanc PACS ─────────────────────────────────────────────
+  orthanc:
+    image: orthancteam/orthanc:24.3.3
+    container_name: his_ris_orthanc
+    restart: unless-stopped
+    environment:
+      ORTHANC_JSON: "/etc/orthanc/orthanc.json"
+    volumes:
+      - ./infrastructure/orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
+      - orthanc_data:/var/lib/orthanc/db
+      - worklist_data:/var/lib/orthanc/worklists
+    ports:
+      - "8042:8042"   # HTTP REST API
+      - "4242:4242"   # DICOM SCP
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8042/system"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - his_ris_net
+
+  # ─── Backend FastAPI ──────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: his_ris_api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://his_ris_user:his_ris_password@postgres:5432/his_ris}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      - ORTHANC_URL=${ORTHANC_URL:-http://orthanc:8042}
+      - ORTHANC_USERNAME=${ORTHANC_USERNAME:-orthanc}
+      - ORTHANC_PASSWORD=${ORTHANC_PASSWORD:-orthanc}
+      - WORKLIST_DIR=/var/lib/orthanc/worklists
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-RS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:80}
+      - INSTITUTION_NAME=${INSTITUTION_NAME:-Hospital General}
+    volumes:
+      - worklist_data:/var/lib/orthanc/worklists
+      - ./infrastructure/keys:/app/keys:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      orthanc:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - his_ris_net
+
+  # ─── Celery Worker ────────────────────────────────────────────
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: his_ris_celery
+    restart: unless-stopped
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://his_ris_user:his_ris_password@postgres:5432/his_ris}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      - ORTHANC_URL=${ORTHANC_URL:-http://orthanc:8042}
+      - ORTHANC_USERNAME=${ORTHANC_USERNAME:-orthanc}
+      - ORTHANC_PASSWORD=${ORTHANC_PASSWORD:-orthanc}
+      - WORKLIST_DIR=/var/lib/orthanc/worklists
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      - worklist_data:/var/lib/orthanc/worklists
+      - ./infrastructure/keys:/app/keys:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - his_ris_net
+
+  # ─── Celery Beat (scheduler) ──────────────────────────────────
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: his_ris_celery_beat
+    restart: unless-stopped
+    command: celery -A app.workers.celery_app beat --loglevel=info --scheduler celery.beat:PersistentScheduler
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://his_ris_user:his_ris_password@postgres:5432/his_ris}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - his_ris_net
+
+  # ─── Frontend (production build served by nginx) ──────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: his_ris_frontend
+    restart: unless-stopped
+    networks:
+      - his_ris_net
+
+  # ─── Nginx Reverse Proxy ──────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: his_ris_nginx
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - his_ris_net
+
+volumes:
+  postgres_data:
+  redis_data:
+  orthanc_data:
+  worklist_data:
+
+networks:
+  his_ris_net:
+    driver: bridge

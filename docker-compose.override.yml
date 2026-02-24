@@ -1,0 +1,43 @@
+version: "3.9"
+
+# Development overrides: hot-reload, volume mounts, exposed ports
+
+services:
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+    volumes:
+      - ./backend:/app
+      - worklist_data:/var/lib/orthanc/worklists
+      - ./infrastructure/keys:/app/keys:ro
+    environment:
+      - DEBUG=true
+      - ENVIRONMENT=development
+
+  celery-worker:
+    build:
+      dockerfile: Dockerfile.dev
+    command: celery -A app.workers.celery_app worker --loglevel=debug --concurrency=2 --pool=solo
+    volumes:
+      - ./backend:/app
+      - worklist_data:/var/lib/orthanc/worklists
+
+  celery-beat:
+    build:
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      dockerfile: Dockerfile.dev
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+      - VITE_ORTHANC_URL=http://localhost:8042

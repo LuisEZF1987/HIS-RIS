@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Node
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.docker/
+
+# Keys
+*.pem
+*.key
+*.crt
+private_key.pem
+public_key.pem
+
+# Alembic
+backend/alembic/versions/*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Worklist files (generated)
+infrastructure/orthanc/worklists/*.wl

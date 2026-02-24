@@ -1,0 +1,61 @@
+{
+  "Name": "HIS-RIS PACS",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+
+  "HttpServerEnabled": true,
+  "HttpPort": 8042,
+  "HttpDescribeErrors": false,
+
+  "DicomServerEnabled": true,
+  "DicomPort": 4242,
+  "DicomAet": "ORTHANC",
+  "DicomCheckCalledAet": false,
+
+  "AuthenticationEnabled": true,
+  "RegisteredUsers": {
+    "orthanc": "orthanc"
+  },
+
+  "RemoteAccessAllowed": true,
+  "SslEnabled": false,
+
+  "Plugins": [],
+
+  "Worklists": {
+    "Enable": true,
+    "Database": "/var/lib/orthanc/worklists",
+    "FilterIssuerAet": false
+  },
+
+  "WebServiceRootUrl": "http://his-ris-api:8000",
+
+  "Lua": {},
+
+  "DicomModalities": {
+    "HIS_RIS_SCU": ["HIS_RIS_SCP", "his-ris-api", 11112],
+    "ORTHANC_LOCAL": ["ORTHANC", "orthanc", 4242]
+  },
+
+  "OrthancPeers": {},
+
+  "StorageCompression": false,
+  "StoreMD5": true,
+
+  "LimitFindResults": 100,
+  "LimitFindInstances": 500,
+
+  "IngestTranscoding": "1.2.840.10008.1.2.1",
+
+  "StableAge": 60,
+
+  "OverwriteInstances": false,
+
+  "LogLevel": "WARNING",
+
+  "Transfers": {},
+
+  "WhitelistDicomModalities": false,
+
+  "StrictAetComparison": false
+}
