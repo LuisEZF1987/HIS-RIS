@@ -61,3 +61,7 @@ Thumbs.db
 
 # Worklist files (generated)
 infrastructure/orthanc/worklists/*.wl
+
+# Celery runtime
+backend/celerybeat-schedule
+backend/celerybeat.pid
