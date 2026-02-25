@@ -22,5 +22,9 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    watch: {
+      usePolling: true,   // necesario en Docker/Windows para detectar cambios
+      interval: 300,
+    },
   },
 })
