@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import {
   LayoutDashboard, Users, FileText, Calendar, Settings,
   ClipboardList, ListChecks, Menu, X, LogOut, User,
-  Activity, Stethoscope
+  Stethoscope
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -48,9 +48,11 @@ export default function MainLayout() {
         {/* Logo */}
         <div className="flex items-center h-16 px-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Dimed"
+              className="h-8 w-8 object-contain flex-shrink-0"
+            />
             {sidebarOpen && (
               <div>
                 <p className="font-bold text-gray-900 text-sm">Dimed HIS/RIS</p>
