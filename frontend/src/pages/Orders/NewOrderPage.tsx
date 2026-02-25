@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { ordersApi } from '@/api/orders'
 import { patientsApi } from '@/api/patients'
 import { ArrowLeft, Save } from 'lucide-react'
+import { DateTimePicker } from '@/components/DateTimePicker'
 
 const schema = z.object({
   patient_id: z.number({ coerce: true }).positive('Seleccione un paciente'),
@@ -20,7 +21,17 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
-const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+
+const inputClass =
+  'w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg ' +
+  'focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm ' +
+  'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 ' +
+  'placeholder-gray-400 dark:placeholder-slate-500'
+
+const labelClass = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1'
+
+const cardClass =
+  'bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 space-y-4'
 
 export default function NewOrderPage() {
   const navigate = useNavigate()
@@ -28,7 +39,7 @@ export default function NewOrderPage() {
   const queryClient = useQueryClient()
   const prefilledPatientId = searchParams.get('patient_id')
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       patient_id: prefilledPatientId ? Number(prefilledPatientId) : undefined,
@@ -62,46 +73,69 @@ export default function NewOrderPage() {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-4 mb-6">
-        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nueva Orden de Imagen</h1>
-          <p className="text-gray-500 text-sm">Se generará automáticamente el registro en la Worklist DICOM</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nueva Orden de Imagen</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm">
+            Se generará automáticamente el registro en la Worklist DICOM
+          </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 border-b pb-2">Paciente</h2>
+
+        {/* Paciente */}
+        <div className={cardClass}>
+          <h2 className="font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">
+            Paciente
+          </h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ID Paciente *</label>
-            <input {...register('patient_id')} type="number" className={inputClass} placeholder="ID del paciente" />
-            {errors.patient_id && <p className="text-red-500 text-xs mt-1">{errors.patient_id.message}</p>}
+            <label className={labelClass}>ID Paciente *</label>
+            <input
+              {...register('patient_id')}
+              type="number"
+              className={inputClass}
+              placeholder="ID del paciente"
+            />
+            {errors.patient_id && (
+              <p className="text-red-500 text-xs mt-1">{errors.patient_id.message}</p>
+            )}
             {patient && (
-              <p className="text-green-600 text-xs mt-1">✓ {patient.full_name} (MRN: {patient.mrn})</p>
+              <p className="text-green-600 dark:text-green-400 text-xs mt-1">
+                ✓ {patient.full_name} (MRN: {patient.mrn})
+              </p>
             )}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 border-b pb-2">Estudio</h2>
+        {/* Estudio */}
+        <div className={cardClass}>
+          <h2 className="font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">
+            Estudio
+          </h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Modalidad *</label>
+              <label className={labelClass}>Modalidad *</label>
               <select {...register('modality')} className={inputClass}>
                 <option value="">Seleccionar</option>
-                {['CR', 'CT', 'MR', 'US', 'NM', 'DX', 'MG', 'XA', 'RF', 'OT'].map(m => (
+                {['CR', 'CT', 'MR', 'US', 'NM', 'DX', 'MG', 'XA', 'RF', 'OT'].map((m) => (
                   <option key={m} value={m}>{m}</option>
                 ))}
               </select>
-              {errors.modality && <p className="text-red-500 text-xs mt-1">{errors.modality.message}</p>}
+              {errors.modality && (
+                <p className="text-red-500 text-xs mt-1">{errors.modality.message}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+              <label className={labelClass}>Prioridad</label>
               <select {...register('priority')} className={inputClass}>
                 <option value="ROUTINE">Rutina</option>
                 <option value="URGENT">Urgente</option>
@@ -112,35 +146,67 @@ export default function NewOrderPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descripción del Procedimiento *</label>
-            <input {...register('procedure_description')} className={inputClass} placeholder="Ej: Radiografía de tórax PA y lateral" />
-            {errors.procedure_description && <p className="text-red-500 text-xs mt-1">{errors.procedure_description.message}</p>}
+            <label className={labelClass}>Descripción del Procedimiento *</label>
+            <input
+              {...register('procedure_description')}
+              className={inputClass}
+              placeholder="Ej: Radiografía de tórax PA y lateral"
+            />
+            {errors.procedure_description && (
+              <p className="text-red-500 text-xs mt-1">{errors.procedure_description.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Código de Procedimiento</label>
-              <input {...register('procedure_code')} className={inputClass} placeholder="71046" />
+              <label className={labelClass}>Código de Procedimiento</label>
+              <input
+                {...register('procedure_code')}
+                className={inputClass}
+                placeholder="71046"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Parte del Cuerpo</label>
-              <input {...register('body_part')} className={inputClass} placeholder="CHEST" />
+              <label className={labelClass}>Parte del Cuerpo</label>
+              <input
+                {...register('body_part')}
+                className={inputClass}
+                placeholder="CHEST"
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Indicación Clínica</label>
-            <textarea {...register('clinical_indication')} className={inputClass} rows={2} placeholder="Motivo del estudio..." />
+            <label className={labelClass}>Indicación Clínica</label>
+            <textarea
+              {...register('clinical_indication')}
+              className={inputClass}
+              rows={2}
+              placeholder="Motivo del estudio..."
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha/Hora Programada</label>
-            <input {...register('scheduled_at')} type="datetime-local" className={inputClass} />
+            <label className={labelClass}>Fecha/Hora Programada</label>
+            <Controller
+              name="scheduled_at"
+              control={control}
+              render={({ field }) => (
+                <DateTimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
           </div>
         </div>
 
         <div className="flex gap-3">
-          <button type="button" onClick={() => navigate(-1)} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 font-medium text-sm">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-sm"
+          >
             Cancelar
           </button>
           <button

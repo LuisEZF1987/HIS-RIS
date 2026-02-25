@@ -51,6 +51,34 @@
   }
 }
 
+/* ── Dark mode: form inputs ─────────────────────────────────────────────── */
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='submit']):not([type='button']),
+.dark select,
+.dark textarea {
+  color: #e2e8f0;
+  background-color: #1e293b;
+  border-color: #475569;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
+}
+.dark select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+/* ── Dark mode: page cards ──────────────────────────────────────────────── */
+/* Main content white cards → dark slate */
+.dark .page-card {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+.dark .page-card h2 {
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
 /* Medical-specific styles */
 .badge-status-requested { @apply bg-blue-100 text-blue-800; }
 .badge-status-scheduled { @apply bg-purple-100 text-purple-800; }

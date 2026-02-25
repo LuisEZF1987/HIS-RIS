@@ -1,41 +1,42 @@
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { patientsApi } from '@/api/patients'
 import { ArrowLeft, Save } from 'lucide-react'
+import { DateTimePicker } from '@/components/DateTimePicker'
 
 const schema = z.object({
   first_name: z.string().min(1, 'Requerido'),
-  last_name: z.string().min(1, 'Requerido'),
+  last_name:  z.string().min(1, 'Requerido'),
   date_of_birth: z.string().optional(),
-  gender: z.enum(['M', 'F', 'O', 'U']).optional(),
-  dni: z.string().optional(),
+  gender:     z.enum(['M', 'F', 'O', 'U']).optional(),
+  dni:        z.string().optional(),
   blood_type: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'UNKNOWN']).optional(),
-  allergies: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  allergies:  z.string().optional(),
+  phone:      z.string().optional(),
+  email:      z.string().email().optional().or(z.literal('')),
 })
-
 type FormData = z.infer<typeof schema>
 
 function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
       {children}
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   )
 }
 
-const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+const inputClass = "w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
+const cardClass  = "bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 space-y-4"
 
 export default function NewPatientPage() {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const navigate     = useNavigate()
+  const queryClient  = useQueryClient()
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -47,13 +48,13 @@ export default function NewPatientPage() {
       if (data.phone) contacts.push({ contact_type: 'phone', value: data.phone, is_primary: true })
       if (data.email) contacts.push({ contact_type: 'email', value: data.email })
       return patientsApi.create({
-        first_name: data.first_name,
-        last_name: data.last_name,
+        first_name:    data.first_name,
+        last_name:     data.last_name,
         date_of_birth: data.date_of_birth || undefined,
-        gender: data.gender,
-        dni: data.dni || undefined,
-        blood_type: data.blood_type,
-        allergies: data.allergies || undefined,
+        gender:        data.gender,
+        dni:           data.dni || undefined,
+        blood_type:    data.blood_type,
+        allergies:     data.allergies || undefined,
         contacts,
       })
     },
@@ -70,18 +71,20 @@ export default function NewPatientPage() {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-4 mb-6">
-        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700">
+        <button onClick={() => navigate(-1)} className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nuevo Paciente</h1>
-          <p className="text-gray-500 text-sm">Registrar nuevo paciente en el sistema</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nuevo Paciente</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm">Registrar nuevo paciente en el sistema</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 border-b pb-2">Datos Personales</h2>
+        <div className={cardClass}>
+          <h2 className="font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">
+            Datos Personales
+          </h2>
 
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Nombres *" error={errors.first_name?.message}>
@@ -114,7 +117,7 @@ export default function NewPatientPage() {
             <FormField label="Tipo de Sangre">
               <select {...register('blood_type')} className={inputClass}>
                 <option value="">Desconocido</option>
-                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(t => (
+                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
@@ -126,11 +129,13 @@ export default function NewPatientPage() {
           </FormField>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900 border-b pb-2">Contacto</h2>
+        <div className={cardClass}>
+          <h2 className="font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">
+            Contacto
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Teléfono">
-              <input {...register('phone')} className={inputClass} placeholder="+54 11 1234-5678" />
+              <input {...register('phone')} className={inputClass} placeholder="+593 99 123 4567" />
             </FormField>
             <FormField label="Email" error={errors.email?.message}>
               <input {...register('email')} type="email" className={inputClass} placeholder="paciente@email.com" />
@@ -139,7 +144,11 @@ export default function NewPatientPage() {
         </div>
 
         <div className="flex gap-3">
-          <button type="button" onClick={() => navigate(-1)} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 font-medium text-sm">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-sm"
+          >
             Cancelar
           </button>
           <button

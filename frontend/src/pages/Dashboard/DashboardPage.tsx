@@ -10,11 +10,11 @@ function StatCard({ title, value, icon: Icon, color, to }: {
   title: string; value?: number; icon: any; color: string; to: string
 }) {
   return (
-    <Link to={to} className="block bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+    <Link to={to} className="block bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value ?? '...'}</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value ?? '...'}</p>
         </div>
         <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
@@ -66,10 +66,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {getGreeting()}, {user?.full_name?.split(' ')[0]}
         </h1>
-        <p className="text-gray-500 mt-1">Resumen del sistema Dimed HIS/RIS</p>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Resumen del sistema Dimed HIS/RIS</p>
       </div>
 
       {/* Stats grid */}
@@ -114,10 +114,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent orders */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Órdenes Recientes</h2>
-          <Link to="/orders" className="text-primary-600 text-sm hover:underline">Ver todas →</Link>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Órdenes Recientes</h2>
+          <Link to="/orders" className="text-primary-600 dark:text-blue-400 text-sm hover:underline">Ver todas →</Link>
         </div>
         <RecentOrdersList />
       </div>
@@ -125,15 +125,15 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Nuevo Paciente', to: '/patients/new', icon: Users, color: 'bg-blue-50 text-blue-700' },
-          { label: 'Nueva Orden', to: '/orders/new', icon: ClipboardList, color: 'bg-orange-50 text-orange-700' },
-          { label: 'Ver Worklist', to: '/worklist', icon: ListChecks, color: 'bg-green-50 text-green-700' },
-          { label: 'Ver Agenda', to: '/schedule', icon: Activity, color: 'bg-purple-50 text-purple-700' },
+          { label: 'Nuevo Paciente', to: '/patients/new', icon: Users, lightColor: 'bg-blue-50 text-blue-700', darkColor: 'dark:bg-blue-900/20 dark:text-blue-400' },
+          { label: 'Nueva Orden', to: '/orders/new', icon: ClipboardList, lightColor: 'bg-orange-50 text-orange-700', darkColor: 'dark:bg-orange-900/20 dark:text-orange-400' },
+          { label: 'Ver Worklist', to: '/worklist', icon: ListChecks, lightColor: 'bg-green-50 text-green-700', darkColor: 'dark:bg-green-900/20 dark:text-green-400' },
+          { label: 'Ver Agenda', to: '/schedule', icon: Activity, lightColor: 'bg-purple-50 text-purple-700', darkColor: 'dark:bg-purple-900/20 dark:text-purple-400' },
         ].map((action) => (
           <Link
             key={action.to}
             to={action.to}
-            className={`${action.color} rounded-xl p-4 flex flex-col items-center gap-2 hover:opacity-80 transition-opacity`}
+            className={`${action.lightColor} ${action.darkColor} rounded-xl p-4 flex flex-col items-center gap-2 hover:opacity-80 transition-opacity border border-transparent dark:border-slate-700`}
           >
             <action.icon className="w-6 h-6" />
             <span className="text-sm font-medium">{action.label}</span>
@@ -151,27 +151,27 @@ function RecentOrdersList() {
   })
 
   if (!data?.items.length) {
-    return <p className="text-gray-500 text-sm">No hay órdenes recientes</p>
+    return <p className="text-gray-500 dark:text-slate-400 text-sm">No hay órdenes recientes</p>
   }
 
   const statusColors: Record<string, string> = {
-    REQUESTED: 'bg-blue-100 text-blue-700',
-    SCHEDULED: 'bg-purple-100 text-purple-700',
-    IN_PROGRESS: 'bg-yellow-100 text-yellow-700',
-    COMPLETED: 'bg-green-100 text-green-700',
-    CANCELLED: 'bg-red-100 text-red-700',
+    REQUESTED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    SCHEDULED: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    IN_PROGRESS: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    COMPLETED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   }
 
   return (
     <div className="space-y-3">
       {data.items.map((order) => (
-        <div key={order.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+        <div key={order.id} className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-slate-700 last:border-0">
           <div>
-            <p className="text-sm font-medium text-gray-900">{order.procedure_description}</p>
-            <p className="text-xs text-gray-500">{order.accession_number} · {order.modality}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{order.procedure_description}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{order.accession_number} · {order.modality}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-600'}`}>
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'}`}>
               {order.status}
             </span>
           </div>
