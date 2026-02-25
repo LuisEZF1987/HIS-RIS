@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { RadiologyReport } from '@/types'
+import type { RadiologyReport, ReportListItem, ImagingStudyWithReport } from '@/types'
 
 export interface CreateReportData {
   study_id: number
@@ -11,6 +11,9 @@ export interface CreateReportData {
 }
 
 export const reportsApi = {
+  list: (params?: { status?: string }) =>
+    apiClient.get<ReportListItem[]>('/reports', { params }).then((r) => r.data),
+
   get: (id: number) =>
     apiClient.get<RadiologyReport>(`/reports/${id}`).then((r) => r.data),
 
@@ -25,4 +28,7 @@ export const reportsApi = {
 
   downloadPdf: (id: number) =>
     apiClient.get(`/reports/${id}/pdf`, { responseType: 'blob' }).then((r) => r.data),
+
+  listStudies: (params?: { status?: string }) =>
+    apiClient.get<ImagingStudyWithReport[]>('/studies', { params }).then((r) => r.data),
 }

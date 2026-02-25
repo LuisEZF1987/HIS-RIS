@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 def retry_failed_messages():
     """Retry HL7 messages that failed to send."""
     import asyncio
+    import app.db.base  # noqa: F401
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
     from sqlalchemy import select
     from app.config import get_settings
@@ -45,6 +46,7 @@ def retry_failed_messages():
 def process_inbound_hl7(raw_message: str):
     """Process an inbound HL7 message."""
     import asyncio
+    import app.db.base  # noqa: F401 — registers all ORM models
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
     from app.config import get_settings
     from app.models.hl7_message import HL7Message, HL7Direction, HL7Status

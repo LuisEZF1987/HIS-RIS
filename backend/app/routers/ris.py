@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 import math
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Query
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.dependencies import CurrentUser, DBSession, require_permission
+from app.models.order import ImagingOrder
+from app.models.report import RadiologyReport
+from app.models.study import ImagingStudy, StudyStatus
 from app.schemas.order import (
     ImagingOrderCreate, ImagingOrderResponse, ImagingOrderUpdate,
     PaginatedOrders, WorklistEntryResponse,
 )
+from app.schemas.study import ImagingStudyResponse
 from app.services.order_service import OrderService
 from app.services.worklist_service import WorklistService
 
@@ -76,3 +82,50 @@ async def get_worklist(
 ):
     svc = WorklistService(db)
     return await svc.get_active_worklist(modality)
+
+
+@router.get("/studies", response_model=List[ImagingStudyResponse],
+            dependencies=[require_permission("orders:read")])
+async def list_studies(db: DBSession, status: Optional[str] = None):
+    """List imaging studies enriched with order/patient/report info."""
+    stmt = (
+        select(ImagingStudy)
+        .options(
+            selectinload(ImagingStudy.order).selectinload(ImagingOrder.patient),
+            selectinload(ImagingStudy.report),
+        )
+        .order_by(ImagingStudy.created_at.desc())
+    )
+    if status:
+        try:
+            stmt = stmt.where(ImagingStudy.status == StudyStatus(status.upper()))
+        except ValueError:
+            pass
+    result = await db.execute(stmt)
+    studies = result.scalars().all()
+
+    items: List[ImagingStudyResponse] = []
+    for s in studies:
+        order = s.order
+        patient = order.patient if order else None
+        report = s.report
+        items.append(ImagingStudyResponse(
+            id=s.id,
+            order_id=s.order_id,
+            study_instance_uid=s.study_instance_uid,
+            orthanc_study_id=s.orthanc_study_id,
+            series_count=s.series_count,
+            instances_count=s.instances_count,
+            modality=s.modality or (order.modality.value if order else None),
+            study_description=s.study_description,
+            status=s.status,
+            received_at=s.received_at,
+            created_at=s.created_at,
+            accession_number=order.accession_number if order else None,
+            patient_id=patient.id if patient else None,
+            patient_name=patient.full_name if patient else None,
+            patient_mrn=patient.mrn if patient else None,
+            report_id=report.id if report else None,
+            report_status=report.status.value if report else None,
+        ))
+    return items

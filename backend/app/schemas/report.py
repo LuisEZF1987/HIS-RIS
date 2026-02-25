@@ -39,6 +39,23 @@ class ReportVersionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ReportListResponse(BaseModel):
+    id: int
+    study_id: int
+    status: ReportStatus
+    signed_by: Optional[str] = None
+    signed_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    # Enriched fields
+    accession_number: Optional[str] = None
+    modality: Optional[str] = None
+    patient_name: Optional[str] = None
+    patient_mrn: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class ReportResponse(BaseModel):
     id: int
     study_id: int

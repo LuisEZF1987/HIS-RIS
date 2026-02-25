@@ -1,13 +1,59 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import List
+
+from fastapi import APIRouter, Query
 from fastapi.responses import Response
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.dependencies import CurrentUser, DBSession, require_permission
-from app.schemas.report import ReportCreate, ReportResponse, ReportSignRequest, ReportUpdate
+from app.models.order import ImagingOrder
+from app.models.report import RadiologyReport
+from app.models.study import ImagingStudy
+from app.schemas.report import ReportCreate, ReportListResponse, ReportResponse, ReportSignRequest, ReportUpdate
 from app.services.report_service import ReportService
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
+
+
+@router.get("", response_model=List[ReportListResponse],
+            dependencies=[require_permission("reports:read")])
+async def list_reports(db: DBSession, status: str = Query(None)):
+    """List radiology reports with study/patient info."""
+    stmt = (
+        select(RadiologyReport)
+        .options(
+            selectinload(RadiologyReport.study)
+            .selectinload(ImagingStudy.order)
+            .selectinload(ImagingOrder.patient)
+        )
+        .order_by(RadiologyReport.updated_at.desc())
+    )
+    if status:
+        stmt = stmt.where(RadiologyReport.status == status)
+    result = await db.execute(stmt)
+    reports = result.scalars().all()
+
+    items: List[ReportListResponse] = []
+    for r in reports:
+        study = r.study
+        order = study.order if study else None
+        patient = order.patient if order else None
+        items.append(ReportListResponse(
+            id=r.id,
+            study_id=r.study_id,
+            status=r.status,
+            signed_by=r.signed_by,
+            signed_at=r.signed_at,
+            created_at=r.created_at,
+            updated_at=r.updated_at,
+            accession_number=order.accession_number if order else None,
+            modality=study.modality or (order.modality.value if order else None),
+            patient_name=patient.full_name if patient else None,
+            patient_mrn=patient.mrn if patient else None,
+        ))
+    return items
 
 
 @router.post("", response_model=ReportResponse, status_code=201,

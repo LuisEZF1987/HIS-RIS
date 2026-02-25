@@ -1,59 +1,201 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { ordersApi } from '@/api/orders'
-import { FileText } from 'lucide-react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router-dom'
+import { reportsApi } from '@/api/reports'
+import { FileText, FilePlus, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import toast from 'react-hot-toast'
+import type { ReportStatus } from '@/types'
+
+const STATUS_LABELS: Record<ReportStatus | string, { label: string; color: string }> = {
+  draft:       { label: 'Borrador',    color: 'bg-yellow-100 text-yellow-700' },
+  preliminary: { label: 'Preliminar', color: 'bg-blue-100 text-blue-700' },
+  final:       { label: 'Firmado',    color: 'bg-green-100 text-green-700' },
+  amended:     { label: 'Enmendado',  color: 'bg-purple-100 text-purple-700' },
+  cancelled:   { label: 'Cancelado',  color: 'bg-red-100 text-red-700' },
+}
 
 export default function ReportsListPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['orders', 'completed'],
-    queryFn: () => ordersApi.list({ status: 'COMPLETED', page: 1, page_size: 50 }),
+  const [tab, setTab] = useState<'pending' | 'reports'>('pending')
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  const { data: studies, isLoading: loadingStudies } = useQuery({
+    queryKey: ['studies'],
+    queryFn: () => reportsApi.listStudies(),
+    enabled: tab === 'pending',
   })
+
+  const { data: reports, isLoading: loadingReports } = useQuery({
+    queryKey: ['reports'],
+    queryFn: () => reportsApi.list(),
+    enabled: tab === 'reports',
+  })
+
+  const createReport = useMutation({
+    mutationFn: (study_id: number) =>
+      reportsApi.create({ study_id }),
+    onSuccess: (report) => {
+      queryClient.invalidateQueries({ queryKey: ['studies'] })
+      toast.success('Informe creado — redactando...')
+      navigate(`/reports/${report.id}`)
+    },
+    onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al crear informe'),
+  })
+
+  const pendingStudies = studies?.filter((s) => !s.report_id) ?? []
+  const studiesWithReport = studies?.filter((s) => !!s.report_id) ?? []
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Informes Radiológicos</h1>
-        <p className="text-gray-500 text-sm mt-1">Estudios completados pendientes de informe</p>
+        <p className="text-gray-500 text-sm mt-1">Gestión de informes y estudios pendientes</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Cargando...</div>
-        ) : !data?.items.length ? (
-          <div className="p-12 text-center text-gray-500">
-            <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>No hay estudios completados disponibles</p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                {['Nº Acceso', 'Modalidad', 'Procedimiento', 'Fecha', 'Acciones'].map(h => (
-                  <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {data.items.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-mono text-primary-600">{order.accession_number}</td>
-                  <td className="px-4 py-3">
-                    <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">{order.modality}</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{order.procedure_description}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {order.completed_at ? format(parseISO(order.completed_at), 'dd/MM/yyyy') : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-primary-600 text-sm hover:underline cursor-pointer">Crear Informe →</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      {/* Tabs */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+        <button
+          onClick={() => setTab('pending')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            tab === 'pending' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Pendientes de Informe
+          </span>
+        </button>
+        <button
+          onClick={() => setTab('reports')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            tab === 'reports' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Mis Informes
+          </span>
+        </button>
       </div>
+
+      {/* ── Tab: Estudios pendientes ── */}
+      {tab === 'pending' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          {loadingStudies ? (
+            <div className="p-8 text-center text-gray-500">Cargando estudios...</div>
+          ) : pendingStudies.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-300" />
+              <p className="font-medium">No hay estudios pendientes de informe</p>
+              {studiesWithReport.length > 0 && (
+                <p className="text-sm mt-1">
+                  {studiesWithReport.length} estudio(s) ya tienen informe →{' '}
+                  <button onClick={() => setTab('reports')} className="text-primary-600 underline">ver informes</button>
+                </p>
+              )}
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {['Paciente', 'MRN', 'Nº Acceso', 'Modalidad', 'Series', 'Recibido', 'Acción'].map((h) => (
+                    <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {pendingStudies.map((s) => (
+                  <tr key={s.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{s.patient_name ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-gray-500">{s.patient_mrn ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-primary-600">{s.accession_number ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">
+                        {s.modality ?? '—'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{s.series_count}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {s.received_at ? format(parseISO(s.received_at), 'dd/MM/yy HH:mm') : format(parseISO(s.created_at), 'dd/MM/yy')}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => createReport.mutate(s.id)}
+                        disabled={createReport.isPending}
+                        className="flex items-center gap-1.5 bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                      >
+                        <FilePlus className="w-3.5 h-3.5" />
+                        Crear Informe
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* ── Tab: Informes existentes ── */}
+      {tab === 'reports' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          {loadingReports ? (
+            <div className="p-8 text-center text-gray-500">Cargando informes...</div>
+          ) : !reports?.length ? (
+            <div className="p-12 text-center text-gray-500">
+              <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>No hay informes creados aún</p>
+              <button onClick={() => setTab('pending')} className="mt-2 text-primary-600 text-sm underline">
+                Ver estudios pendientes →
+              </button>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {['Paciente', 'MRN', 'Nº Acceso', 'Modalidad', 'Estado', 'Actualizado', 'Acciones'].map((h) => (
+                    <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {reports.map((rp) => {
+                  const s = STATUS_LABELS[rp.status] ?? { label: rp.status, color: 'bg-gray-100 text-gray-600' }
+                  return (
+                    <tr key={rp.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{rp.patient_name ?? '—'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-gray-500">{rp.patient_mrn ?? '—'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-primary-600">{rp.accession_number ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">
+                          {rp.modality ?? '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${s.color}`}>
+                          {s.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {format(parseISO(rp.updated_at), 'dd/MM/yy HH:mm')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          to={`/reports/${rp.id}`}
+                          className="text-primary-600 text-sm font-medium hover:underline"
+                        >
+                          {rp.status === 'final' ? 'Ver →' : 'Editar →'}
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   )
 }

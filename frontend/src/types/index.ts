@@ -126,8 +126,43 @@ export interface WorklistEntry {
   status: string
 }
 
+// ── Studies (enriched) ────────────────────────────────────────────────────────
+export interface ImagingStudyWithReport {
+  id: number
+  order_id?: number
+  study_instance_uid: string
+  orthanc_study_id?: string
+  series_count: number
+  instances_count: number
+  modality?: string
+  study_description?: string
+  status: StudyStatus
+  received_at?: string
+  created_at: string
+  accession_number?: string
+  patient_id?: number
+  patient_name?: string
+  patient_mrn?: string
+  report_id?: number
+  report_status?: string
+}
+
 // ── Reports ───────────────────────────────────────────────────────────────────
 export type ReportStatus = 'draft' | 'preliminary' | 'final' | 'amended' | 'cancelled'
+
+export interface ReportListItem {
+  id: number
+  study_id: number
+  status: ReportStatus
+  signed_by?: string
+  signed_at?: string
+  created_at: string
+  updated_at: string
+  accession_number?: string
+  modality?: string
+  patient_name?: string
+  patient_mrn?: string
+}
 
 export interface ReportVersion {
   id: number

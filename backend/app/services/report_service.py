@@ -52,7 +52,7 @@ class ReportService:
         )
         self.db.add(report)
         await self.db.flush()
-        return report
+        return await self.get_by_id(report.id)
 
     async def get_by_id(self, report_id: int) -> RadiologyReport:
         result = await self.db.execute(
@@ -88,7 +88,7 @@ class ReportService:
         report.status = ReportStatus.preliminary
 
         await self.db.flush()
-        return report
+        return await self.get_by_id(report.id)
 
     async def sign_report(self, report_id: int, password: str, user: User) -> RadiologyReport:
         # Re-authenticate
@@ -114,7 +114,7 @@ class ReportService:
         report.status = ReportStatus.final
 
         await self.db.flush()
-        return report
+        return await self.get_by_id(report.id)
 
     async def generate_pdf(self, report_id: int) -> bytes:
         from reportlab.lib.pagesizes import A4

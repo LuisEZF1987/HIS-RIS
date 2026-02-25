@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 def generate_report_pdf(report_id: int):
     """Generate PDF for a signed report and store the path."""
     import asyncio
+    import app.db.base  # noqa: F401
     import os
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
     from sqlalchemy import select

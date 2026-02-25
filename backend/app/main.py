@@ -23,7 +23,21 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Environment: {settings.environment}")
+
+    # Start HL7 MLLP TCP listener on port 2575
+    mllp_server = None
+    try:
+        from app.core.mllp_server import start_mllp_server
+        mllp_server = await start_mllp_server(host="0.0.0.0", port=2575)
+    except Exception as e:
+        logger.warning(f"MLLP server could not start: {e}")
+
     yield
+
+    if mllp_server:
+        mllp_server.close()
+        await mllp_server.wait_closed()
+        logger.info("MLLP server stopped")
     await engine.dispose()
     logger.info("Shutdown complete")
 

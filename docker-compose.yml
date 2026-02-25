@@ -88,6 +88,7 @@ services:
       - ./infrastructure/keys:/app/keys:ro
     ports:
       - "8000:8000"
+      - "2575:2575"     # HL7 MLLP TCP listener
     depends_on:
       postgres:
         condition: service_healthy

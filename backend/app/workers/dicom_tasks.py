@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 def link_study_to_order(self, orthanc_study_id: str, accession_number: str):
     """Links an Orthanc study to the corresponding ImagingOrder."""
     import asyncio
+    import app.db.base  # noqa: F401
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
     from sqlalchemy import select
     from app.config import get_settings
@@ -73,6 +74,7 @@ def link_study_to_order(self, orthanc_study_id: str, accession_number: str):
 def cleanup_expired_worklist_entries():
     """Remove worklist entries older than 7 days."""
     import asyncio
+    import app.db.base  # noqa: F401
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
     from sqlalchemy import select, delete
     from app.config import get_settings
