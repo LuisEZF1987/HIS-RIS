@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instrucciones de Exportación AS400 — Dimed HIS/RIS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 32px 16px;
+    }
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      padding: 32px 40px;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header .subtitle { margin-top: 6px; opacity: .82; font-size: 13px; }
+    .badge {
+      display: inline-block;
+      margin-top: 14px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Body ── */
+    .body { padding: 36px 40px; }
+
+    .intro {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 4px;
+      padding: 14px 18px;
+      margin-bottom: 32px;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #1e3a5f;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2 .num {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 50%;
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .section { margin-bottom: 38px; }
+
+    p { line-height: 1.65; color: #374151; margin-bottom: 10px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    th {
+      background: #1e3a5f;
+      color: #fff;
+      text-align: left;
+      padding: 9px 12px;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    td strong { color: #1e3a5f; }
+    td.required { color: #dc2626; font-weight: 600; }
+    td.optional { color: #6b7280; }
+    td.code { font-family: 'Courier New', monospace; font-size: 12px; color: #1d4ed8; }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 18px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 12px 0 20px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .code-block .comment { color: #64748b; }
+    .code-block .cmd     { color: #86efac; }
+    .code-block .param   { color: #fbbf24; }
+    .code-block .str     { color: #f9a8d4; }
+
+    .code-inline {
+      font-family: 'Courier New', monospace;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 12.5px;
+      color: #1d4ed8;
+    }
+
+    /* ── Info / warning boxes ── */
+    .box {
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 14px 0;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .box-info    { background: #eff6ff; border-left: 4px solid #2563eb; }
+    .box-warn    { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .box-success { background: #f0fdf4; border-left: 4px solid #16a34a; }
+    .box-danger  { background: #fef2f2; border-left: 4px solid #dc2626; }
+
+    .box .box-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .box-info    .box-title { color: #1d4ed8; }
+    .box-warn    .box-title { color: #b45309; }
+    .box-success .box-title { color: #15803d; }
+    .box-danger  .box-title { color: #b91c1c; }
+
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 5px; line-height: 1.6; }
+
+    /* ── Checklist ── */
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      padding: 8px 12px 8px 36px;
+      position: relative;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      font-size: 16px;
+      color: #94a3b8;
+    }
+
+    /* ── Step sequence ── */
+    .steps { counter-reset: step; padding: 0; list-style: none; }
+    .steps li {
+      counter-increment: step;
+      padding: 10px 12px 10px 44px;
+      position: relative;
+      border-bottom: 1px solid #e2e8f0;
+      line-height: 1.6;
+    }
+    .steps li:last-child { border-bottom: none; }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: #2563eb;
+      color: #fff;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 40px;
+      font-size: 12px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+      .code-block { page-break-inside: avoid; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <h1>Instrucciones de Exportación IBM AS400</h1>
+    <div class="subtitle">Migración de datos al sistema Dimed HIS/RIS</div>
+    <div class="badge">Para el Técnico de Sistemas</div>
+  </div>
+
+  <!-- ── BODY ── -->
+  <div class="body">
+
+    <div class="intro">
+      Este documento contiene las instrucciones exactas que debe seguir el técnico de IBM AS400 para
+      exportar los datos de pacientes y estudios radiológicos al nuevo sistema Dimed HIS/RIS.
+      No se necesita instalar nada adicional en el AS400. Solo se deben exportar tablas como
+      archivos CSV y transferirlos por FTP o USB.
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">1</span> Información que necesitamos</h2>
+
+      <p>Por favor proporcione los datos de las siguientes tablas del sistema AS400. En muchos sistemas AS400
+      los nombres exactos de tablas y columnas varían — si los nombres que aparecen aquí no coinciden
+      con los de su sistema, indique los nombres reales.</p>
+
+      <h3 style="margin:16px 0 10px; font-size:14px; color:#374151;">📋 Tablas requeridas</h3>
+
+      <table>
+        <tr>
+          <th>Tabla / Archivo AS400</th>
+          <th>Descripción</th>
+          <th>Prioridad</th>
+        </tr>
+        <tr>
+          <td><strong>PACIENTES</strong><br><span style="color:#64748b;font-size:12px;">(puede llamarse: PAC, MPACIENTE, HIST_PAC, ADMISION, DEMOGRAFICOS)</span></td>
+          <td>Datos personales de cada paciente</td>
+          <td class="required">OBLIGATORIO</td>
+        </tr>
+        <tr>
+          <td><strong>ORDENES / ESTUDIOS</strong><br><span style="color:#64748b;font-size:12px;">(puede llamarse: ORD, ESTUDIOS, EXAM, SOLICITUDES, PEDIDOS, RAD_ORD)</span></td>
+          <td>Historial de órdenes radiológicas</td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>MEDICOS</strong><br><span style="color:#64748b;font-size:12px;">(puede llamarse: MED, DOCTORES, PROFESIONALES)</span></td>
+          <td>Médicos que solicitaron estudios (solo para referencia)</td>
+          <td class="optional">Opcional</td>
+        </tr>
+      </table>
+
+      <div class="box box-info">
+        <span class="box-title">ℹ Nota</span>
+        Si el sistema AS400 tiene los datos en un esquema diferente, o si la tabla de pacientes
+        está distribuida en varias tablas (datos demográficos + contactos separados), por favor
+        indíquelo para que podamos ajustar el proceso de migración.
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">2</span> Columnas necesarias — Tabla de Pacientes</h2>
+
+      <p>Necesitamos las siguientes columnas. Si en el AS400 tienen nombres diferentes,
+      <strong>inclúyalas de todas formas y mencione qué representa cada una</strong>.</p>
+
+      <table>
+        <tr>
+          <th>Dato</th>
+          <th>Nombres posibles en AS400</th>
+          <th>Requerido</th>
+        </tr>
+        <tr>
+          <td><strong>Cédula / DNI</strong></td>
+          <td class="code">CEDULA, DNI, CI, NRO_DOC, NUM_ID, IDENTIFICACION, RIF</td>
+          <td class="required">SÍ *</td>
+        </tr>
+        <tr>
+          <td><strong>Nombre(s)</strong></td>
+          <td class="code">NOMBRE, NOMBRES, PRIMER_NOMBRE, PNOMBRE, PAC_NOM</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Apellido(s)</strong></td>
+          <td class="code">APELLIDO, APELLIDOS, PRIMER_APELLIDO, PAPELLIDO, PAC_APE</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Fecha de nacimiento</strong></td>
+          <td class="code">FECHA_NAC, FNAC, FEC_NAC, BIRTH_DATE, NACIMIENTO, DTNAC</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Sexo / Género</strong></td>
+          <td class="code">SEXO, GENERO, GENDER, SEX (M/F o 1/2)</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Teléfono</strong></td>
+          <td class="code">TELEFONO, TEL, PHONE, CELULAR, TELF1</td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>Dirección</strong></td>
+          <td class="code">DIRECCION, DIR, ADDRESS, DOMICILIO</td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>Email</strong></td>
+          <td class="code">EMAIL, CORREO, MAIL</td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>Historia clínica / MRN</strong></td>
+          <td class="code">HC, HIST, MRN, NHC, NUMERO_HC, COD_PAC, ID_PAC</td>
+          <td class="optional">Opcional</td>
+        </tr>
+      </table>
+
+      <div class="box box-warn">
+        <span class="box-title">⚠ Cédula obligatoria</span>
+        La cédula o número de identidad es el campo clave para evitar duplicados durante la
+        migración. Sin este campo, no es posible verificar si un paciente ya existe en el
+        nuevo sistema.
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">3</span> Columnas necesarias — Tabla de Órdenes/Estudios</h2>
+
+      <table>
+        <tr>
+          <th>Dato</th>
+          <th>Nombres posibles en AS400</th>
+          <th>Requerido</th>
+        </tr>
+        <tr>
+          <td><strong>Cédula del paciente</strong></td>
+          <td class="code">CEDULA_PAC, DNI_PAC, CI_PAC, NRO_DOC (para enlazar con paciente)</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Modalidad / Tipo de estudio</strong></td>
+          <td class="code">MODALIDAD, TIPO_ESTUDIO, MODALITY, EXAM_TYPE<br>
+            <span style="color:#64748b">(RX, TAC, RMN, ECO, etc.)</span></td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Descripción del procedimiento</strong></td>
+          <td class="code">DESCRIPCION, DESC_PROC, PROCEDIMIENTO, ESTUDIO, EXAM_DESC</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Fecha de la orden</strong></td>
+          <td class="code">FECHA_ORD, FECHA_ESTUDIO, FEC_SOL, DATE_ORDER</td>
+          <td class="required">SÍ</td>
+        </tr>
+        <tr>
+          <td><strong>Médico solicitante</strong></td>
+          <td class="code">MEDICO, MEDICO_SOL, DR_SOLICITANTE, DOCTOR</td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>Prioridad</strong></td>
+          <td class="code">PRIORIDAD, PRIORITY, URGENCIA<br>
+            <span style="color:#64748b">(NORMAL, URGENTE, STAT, etc.)</span></td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>Estado de la orden</strong></td>
+          <td class="code">ESTADO, STATUS, ESTADO_ORD</td>
+          <td class="optional">Opcional</td>
+        </tr>
+        <tr>
+          <td><strong>Número de acceso / orden</strong></td>
+          <td class="code">ACCESSION, NRO_ORD, NUM_ORDEN, COD_ESTUDIO</td>
+          <td class="optional">Opcional</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">4</span> Comandos para exportar los datos (AS400)</h2>
+
+      <p>En la sesión de AS400 (emulador de terminal 5250), ejecute los siguientes comandos
+      en la línea de comandos de OS/400 o IBM i. Estos comandos exportan las tablas
+      como archivos CSV en el directorio <span class="code-inline">QGPL</span>.</p>
+
+      <div class="box box-info">
+        <span class="box-title">ℹ Antes de empezar</span>
+        Reemplace <span class="code-inline">SUBIBLIOTECA</span> con el nombre real de la
+        biblioteca (schema) donde están sus datos. Por ejemplo:
+        <span class="code-inline">HISDATA</span>, <span class="code-inline">RADDATA</span>,
+        <span class="code-inline">PRODLIB</span>, etc. Consulte con su administrador AS400
+        si no sabe el nombre.
+      </div>
+
+      <h3 style="margin:18px 0 10px; font-size:14px; color:#374151;">Exportar tabla de PACIENTES</h3>
+
+      <div class="code-block"><span class="comment">/* Paso 1: Crear archivo de texto en QGPL */</span>
+<span class="cmd">CRTSRCPF</span> <span class="param">FILE</span>(<span class="str">QGPL/EXPORT</span>) <span class="param">RCDLEN</span>(1000)
+
+<span class="comment">/* Paso 2: Exportar pacientes como CSV */</span>
+<span class="cmd">CPYTOIMPF</span> <span class="param">FROMFILE</span>(<span class="str">SUBIBLIOTECA/PACIENTES</span>)   +
+           <span class="param">TOFILE</span>(<span class="str">QGPL/EXPORT</span>)                +
+           <span class="param">TOSTMF</span>(<span class="str">'/tmp/pacientes.csv'</span>)          +
+           <span class="param">MBROPT</span>(*REPLACE)                    +
+           <span class="param">STMFCODPAG</span>(*UTF8)                  +
+           <span class="param">RCDDLM</span>(*CRLF)                      +
+           <span class="param">DTAFMT</span>(*DLM)                       +
+           <span class="param">FLDDLM</span>(',')                        +
+           <span class="param">STRDLM</span>('"')                        +
+           <span class="param">ADDCOLNAM</span>(*SQL)</div>
+
+      <h3 style="margin:18px 0 10px; font-size:14px; color:#374151;">Exportar tabla de ÓRDENES / ESTUDIOS</h3>
+
+      <div class="code-block"><span class="comment">/* Exportar órdenes/estudios como CSV */</span>
+<span class="cmd">CPYTOIMPF</span> <span class="param">FROMFILE</span>(<span class="str">SUBIBLIOTECA/ORDENES</span>)     +
+           <span class="param">TOFILE</span>(<span class="str">QGPL/EXPORT</span>)                +
+           <span class="param">TOSTMF</span>(<span class="str">'/tmp/ordenes.csv'</span>)           +
+           <span class="param">MBROPT</span>(*REPLACE)                    +
+           <span class="param">STMFCODPAG</span>(*UTF8)                  +
+           <span class="param">RCDDLM</span>(*CRLF)                      +
+           <span class="param">DTAFMT</span>(*DLM)                       +
+           <span class="param">FLDDLM</span>(',')                        +
+           <span class="param">STRDLM</span>('"')                        +
+           <span class="param">ADDCOLNAM</span>(*SQL)</div>
+
+      <div class="box box-warn">
+        <span class="box-title">⚠ Si el comando falla por falta de permisos</span>
+        Es posible que necesite autorización especial para crear archivos en <span class="code-inline">/tmp/</span>.
+        En ese caso, use el IFS (Integrated File System) de su biblioteca:
+        <div class="code-block" style="margin-top:10px"><span class="param">TOSTMF</span>(<span class="str">'/QIBM/UserData/export/pacientes.csv'</span>)</div>
+        O exporte a un directorio compartido de red si está disponible.
+      </div>
+
+      <h3 style="margin:18px 0 10px; font-size:14px; color:#374151;">Alternativa: Usando STRSQL (si prefiere SQL)</h3>
+
+      <p>Si tiene acceso a <span class="code-inline">STRSQL</span> (Interactive SQL) o a
+      ACS (Access Client Solutions), puede ejecutar:</p>
+
+      <div class="code-block"><span class="comment">-- En STRSQL o ACS Run SQL Scripts:</span>
+
+<span class="comment">-- Exportar pacientes</span>
+<span class="cmd">CALL</span> QSYS2.IFS_WRITE_UTF8(
+  PATH_NAME => '/tmp/pacientes.csv',
+  LINE => (<span class="cmd">SELECT</span> * <span class="cmd">FROM</span> <span class="str">SUBIBLIOTECA.PACIENTES</span>)
+);
+
+<span class="comment">-- O simplemente en ACS: clic derecho en la tabla → "Export" → CSV</span></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">5</span> Verificar los archivos exportados</h2>
+
+      <p>Antes de transferir los archivos, verifique que se exportaron correctamente:</p>
+
+      <div class="code-block"><span class="comment">/* Ver las primeras líneas del archivo exportado */</span>
+<span class="cmd">DSPF</span> <span class="str">'/tmp/pacientes.csv'</span>
+
+<span class="comment">/* O desde QSHELL (tecla F21 en sesión 5250): */</span>
+head -5 /tmp/pacientes.csv</div>
+
+      <p>El archivo debe verse similar a esto (la primera línea son los nombres de columnas):</p>
+
+      <div class="code-block" style="color:#86efac">"CEDULA","NOMBRE","APELLIDO","FECHA_NAC","SEXO","TELEFONO","DIRECCION"
+"V-12345678","JUAN","PEREZ","19850315","M","04141234567","AV PRINCIPAL"
+"V-98765432","MARIA","GARCIA","19920801","F","04121234567","CALLE 5"
+...</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">6</span> Transferir los archivos al servidor</h2>
+
+      <p>Una vez exportados, transfiera los archivos CSV al servidor donde está instalado el
+      sistema Dimed HIS/RIS. Hay varias formas de hacerlo:</p>
+
+      <h3 style="margin:16px 0 10px; font-size:14px; color:#374151;">Opción A — FTP desde AS400</h3>
+
+      <div class="code-block"><span class="comment">/* Desde la línea de comandos AS400: */</span>
+<span class="cmd">FTP</span> <span class="str">192.168.100.12</span>
+
+<span class="comment">/* Una vez conectado al servidor FTP: */</span>
+<span class="param">user:</span> <span class="str">admin</span>
+<span class="param">pass:</span> <span class="str">(contraseña del servidor)</span>
+<span class="cmd">put</span> /tmp/pacientes.csv pacientes.csv
+<span class="cmd">put</span> /tmp/ordenes.csv ordenes.csv
+<span class="cmd">quit</span></div>
+
+      <h3 style="margin:16px 0 10px; font-size:14px; color:#374151;">Opción B — Descarga manual con ACS</h3>
+      <ol>
+        <li>Abrir IBM Access Client Solutions (ACS)</li>
+        <li>Ir a <strong>Integrated File System</strong></li>
+        <li>Navegar a <span class="code-inline">/tmp/</span></li>
+        <li>Seleccionar <span class="code-inline">pacientes.csv</span> → clic derecho → <strong>Download</strong></li>
+        <li>Guardar en su PC</li>
+        <li>Copiar el archivo al servidor Dimed vía USB o carpeta compartida de red</li>
+      </ol>
+
+      <h3 style="margin:16px 0 10px; font-size:14px; color:#374151;">Opción C — USB / Carpeta de red</h3>
+      <p>Si el AS400 tiene acceso a unidades de red Windows o USB, copie directamente los
+      archivos <span class="code-inline">.csv</span> a la carpeta
+      <span class="code-inline">C:\HIS_RIS\migration\</span> del servidor Dimed.</p>
+
+      <div class="box box-success">
+        <span class="box-title">✓ Destino final de los archivos</span>
+        Los archivos deben quedar en el servidor Dimed en:
+        <div class="code-block" style="margin-top:8px">C:\HIS_RIS\migration\pacientes.csv
+C:\HIS_RIS\migration\ordenes.csv</div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">7</span> Información adicional a proporcionar</h2>
+
+      <p>Junto con los archivos CSV, por favor indique:</p>
+
+      <ul>
+        <li><strong>Nombres exactos de las columnas</strong> que exportó (si son diferentes a los solicitados)</li>
+        <li><strong>Formato de la cédula</strong>: ¿incluye el prefijo V- / E-? ¿Solo números? ¿Con guiones?
+          <br><span style="color:#64748b; font-size:12.5px">Ejemplos: <code>V12345678</code> / <code>V-12345678</code> / <code>12345678</code></span></li>
+        <li><strong>Formato de fechas</strong>: ¿AAAAMMDD? ¿DD/MM/AAAA? ¿DD-MM-AAAA?
+          <br><span style="color:#64748b; font-size:12.5px">El AS400 típicamente usa AAAAMMDD (ej: 19850315 = 15 de marzo de 1985)</span></li>
+        <li><strong>Valores del campo Sexo</strong>: ¿M/F? ¿1/2? ¿MASCULINO/FEMENINO?</li>
+        <li><strong>Valores de Modalidad</strong> (si aplica): ¿RX, TAC, RMN, ECO? ¿Tienen otros códigos?</li>
+        <li><strong>Codificación del archivo</strong>: ¿UTF-8? ¿Latin-1 (ISO-8859-1)? ¿EBCDIC?
+          <br><span style="color:#64748b; font-size:12.5px">El comando indicado usa UTF-8 (<code>STMFCODPAG(*UTF8)</code>) que es el recomendado.</span></li>
+        <li><strong>Cantidad aproximada de registros</strong>: ¿cuántos pacientes? ¿cuántas órdenes?</li>
+        <li><strong>Rango de fechas</strong>: ¿desde qué año están los registros?</li>
+      </ul>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">8</span> Cómo ejecutaremos la migración (para referencia)</h2>
+
+      <p>Una vez que tengamos los archivos CSV en el servidor, ejecutaremos el script de
+      migración incluido en el sistema. El técnico de Dimed no necesita hacer este paso,
+      es solo informativo:</p>
+
+      <div class="code-block"><span class="comment"># Prueba sin insertar datos (verificar columnas y formato)</span>
+python migrate_as400.py --patients pacientes.csv --dry-run
+
+<span class="comment"># Migración real de pacientes + órdenes</span>
+python migrate_as400.py \
+  --patients pacientes.csv \
+  --orders   ordenes.csv \
+  --url      http://192.168.100.12:8080 \
+  --user     admin \
+  --password Admin123!</div>
+
+      <p>El script detecta automáticamente los nombres de columnas, evita duplicados por cédula,
+      convierte los formatos de fecha y mapea los tipos de modalidad.</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">9</span> Lista de verificación para el técnico AS400</h2>
+
+      <ul class="checklist">
+        <li>Identificar el nombre de la biblioteca (schema) donde están los datos</li>
+        <li>Identificar la tabla de pacientes (nombre exacto)</li>
+        <li>Confirmar qué columna contiene la cédula / número de identidad</li>
+        <li>Identificar la tabla de órdenes / estudios (si aplica)</li>
+        <li>Ejecutar comando <span class="code-inline">CPYTOIMPF</span> para exportar pacientes</li>
+        <li>Ejecutar comando <span class="code-inline">CPYTOIMPF</span> para exportar órdenes (si aplica)</li>
+        <li>Verificar que el archivo CSV tenga encabezado de columnas en la primera línea</li>
+        <li>Verificar que los datos con tildes/ñ se ven correctamente (UTF-8)</li>
+        <li>Proporcionar los archivos CSV + la información del punto 7 de este documento</li>
+      </ul>
+    </div>
+
+    <!-- ============================================================ -->
+    <div class="section">
+      <h2><span class="num">10</span> Contacto en caso de dudas</h2>
+
+      <div class="box box-info">
+        <span class="box-title">📞 Coordinador del proyecto Dimed HIS/RIS</span>
+        <p style="margin:8px 0 4px;">Si tiene alguna pregunta sobre este proceso, comuníquese con el
+        equipo técnico de Dimed que coordinó la solicitud de migración.</p>
+        <p>Indique en qué paso tiene dudas y, si puede, adjunte una captura de pantalla del
+        error o del resultado del comando.</p>
+      </div>
+
+      <div class="box box-danger">
+        <span class="box-title">🔒 Importante — Datos sensibles</span>
+        Los archivos CSV exportados contienen datos personales de salud de los pacientes.
+        Trátelos como información confidencial:
+        <ul style="margin-top:8px">
+          <li>No los envíe por correo electrónico no cifrado</li>
+          <li>Transfiera por red interna o entréguelos en USB de forma presencial</li>
+          <li>Elimine las copias temporales del AS400 una vez confirmada la migración</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /.body -->
+
+  <div class="footer">
+    Dimed HIS/RIS — Documento de migración IBM AS400 v1.0 &nbsp;|&nbsp;
+    Uso interno — Confidencial
+  </div>
+
+</div><!-- /.page -->
+</body>
+</html>
