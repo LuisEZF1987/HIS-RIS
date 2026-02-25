@@ -13,6 +13,8 @@ from app.models.patient import Patient
 from app.models.worklist import DicomWorklistEntry, WorklistStatus
 from app.schemas.order import ImagingOrderCreate, ImagingOrderUpdate
 from app.services.worklist_service import WorklistService
+from app.services.schedule_service import ScheduleService
+from app.schemas.schedule import AppointmentCreate
 
 
 class OrderService:
@@ -52,6 +54,19 @@ class OrderService:
         # Update status to scheduled if datetime provided
         if data.scheduled_at:
             order.status = OrderStatus.scheduled
+            # Auto-create appointment in the agenda
+            try:
+                sched_svc = ScheduleService(self.db)
+                await sched_svc.create_appointment(AppointmentCreate(
+                    patient_id=patient.id,
+                    order_id=order.id,
+                    start_datetime=data.scheduled_at,
+                    duration_minutes=30,
+                    notes=data.procedure_description,
+                ))
+            except Exception:
+                # Appointment creation is best-effort; don't fail the order
+                pass
 
         await self.db.flush()
         return order
