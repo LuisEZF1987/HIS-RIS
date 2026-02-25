@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.core.middleware import RequestIDMiddleware, SecurityHeadersMiddleware, TimingMiddleware
+from app.core.middleware import AuditLogMiddleware, RequestIDMiddleware, SecurityHeadersMiddleware, TimingMiddleware
 import app.db.base  # noqa: F401 — registers all ORM models with SQLAlchemy mapper
 from app.db.session import engine
 from app.routers import admin, adt, auth, dicom, fhir, hl7, orthanc, reports, ris, schedule
@@ -54,6 +54,7 @@ app = FastAPI(
 
 # ── Middleware ─────────────────────────────────────────────────────────────────
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(AuditLogMiddleware)
 app.add_middleware(TimingMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
