@@ -35,15 +35,20 @@ async def orthanc_study_webhook(
     if change_type not in ("StableStudy", "NewStudy") or resource_type != "Study":
         return {"status": "ignored"}
 
-    # Get study details from Orthanc
-    orthanc_svc = OrthancService()
-    try:
-        study_data = await orthanc_svc.get_study(orthanc_id)
-    except Exception as e:
-        logger.error(f"Failed to get study from Orthanc: {e}")
-        raise HTTPException(status_code=502, detail="Failed to contact Orthanc")
-
-    main_tags = study_data.get("MainDicomTags", {})
+    # If the payload already includes MainDicomTags (sent by DIMED_PACS or external Orthanc),
+    # use them directly without querying our local Orthanc instance.
+    if "MainDicomTags" in payload:
+        main_tags = payload["MainDicomTags"]
+        logger.info(f"Webhook with embedded DICOM tags from source: {payload.get('source', 'unknown')}")
+    else:
+        # Default: query our own Orthanc instance for the study details
+        orthanc_svc = OrthancService()
+        try:
+            study_data = await orthanc_svc.get_study(orthanc_id)
+        except Exception as e:
+            logger.error(f"Failed to get study from Orthanc: {e}")
+            raise HTTPException(status_code=502, detail="Failed to contact Orthanc")
+        main_tags = study_data.get("MainDicomTags", {})
     study_uid = main_tags.get("StudyInstanceUID", "")
     accession_number = main_tags.get("AccessionNumber", "")
 
@@ -72,14 +77,16 @@ async def orthanc_study_webhook(
         await db.flush()
         return {"status": "updated", "study_id": existing.id}
 
-    # Get stats
-    try:
-        stats = await orthanc_svc.get_study_metadata(orthanc_id)
-        series_count = stats.get("CountSeries", 0)
-        instances_count = stats.get("CountInstances", 0)
-    except Exception:
-        series_count = 0
-        instances_count = 0
+    # Get stats (only from local Orthanc; skip if study came from external source)
+    series_count = 0
+    instances_count = 0
+    if "MainDicomTags" not in payload:
+        try:
+            stats = await orthanc_svc.get_study_metadata(orthanc_id)
+            series_count = stats.get("CountSeries", 0)
+            instances_count = stats.get("CountInstances", 0)
+        except Exception:
+            pass
 
     # Create ImagingStudy record
     study = ImagingStudy(

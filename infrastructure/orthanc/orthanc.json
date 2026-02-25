@@ -27,7 +27,13 @@
   },
 
   "DicomModalities": {},
-  "OrthancPeers": {},
+  "OrthancPeers": {
+    "dimed-pacs": {
+      "Url": "http://host.docker.internal:8042",
+      "Username": "admin",
+      "Password": "admin123"
+    }
+  },
 
   "StorageCompression": false,
   "LimitFindResults": 100,

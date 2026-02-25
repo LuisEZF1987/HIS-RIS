@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Dimed HIS/RIS - Sistema de Información Hospitalaria y Radiológica" />
     <title>Dimed HIS/RIS</title>
+    <!-- Apply saved theme before React renders to prevent flash -->
+    <script>
+      try {
+        var stored = JSON.parse(localStorage.getItem('his-ris-ui') || '{}');
+        var theme = stored.state && stored.state.theme ? stored.state.theme : 'dark';
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch(e) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
