@@ -2,10 +2,10 @@
 <html>
 <head>
 <meta http-equiv="x-ua-compatible" content="ie=11">
-<title>HIS/RIS — Panel de Control</title>
+<title>Dimed HIS/RIS — Panel de Control</title>
 <HTA:APPLICATION
   ID="HisRisApp"
-  APPLICATIONNAME="HIS/RIS Sistema Hospitalario"
+  APPLICATIONNAME="Dimed HIS/RIS"
   CAPTION="yes"
   SHOWINTASKBAR="yes"
   SINGLEINSTANCE="yes"
@@ -214,8 +214,8 @@
 <!-- Title bar -->
 <div id="titlebar">
   <div>
-    <div class="logo">&#9877; HIS/RIS</div>
-    <div class="sub">Sistema Hospitalario — Panel de Control</div>
+    <div class="logo">&#9877; Dimed HIS/RIS</div>
+    <div class="sub">Panel de Control</div>
   </div>
   <div id="status-badge" class="badge">
     <span class="dot red" id="status-dot"></span>
@@ -316,7 +316,7 @@
         <button id="btn-clear" onclick="clearLog()">Limpiar</button>
       </div>
       <div id="log">
-        <div class="log-header-line">HIS/RIS Panel de Control — listo.</div>
+        <div class="log-header-line">Dimed HIS/RIS — Panel de Control listo.</div>
         <div class="log-info">Seleccione una opcion del menu lateral para comenzar.</div>
         <div class="log-info">&#160;</div>
         <div class="log-cmd">Accesos directos:</div>
@@ -330,7 +330,7 @@
 
 <!-- Status bar -->
 <div id="statusbar">
-  <span id="sb-left">HIS/RIS v1.0.0 — Windows Panel</span>
+  <span id="sb-left">Dimed HIS/RIS v1.0.0</span>
   <span id="sb-time"></span>
 </div>
 
@@ -689,10 +689,10 @@ Sub AutoCheck()
     out = RunCmdCapture("curl -s --connect-timeout 2 http://localhost:8000/health")
     If InStr(out, "ok") > 0 Or InStr(out, "healthy") > 0 Or Len(Trim(out)) > 0 Then
         SetStatus "Ejecutando", True
-        Document.getElementById("sb-left").innerText = "HIS/RIS v1.0.0 — Servicios activos"
+        Document.getElementById("sb-left").innerText = "Dimed HIS/RIS v1.0.0 — Servicios activos"
     Else
         SetStatus "Detenido", False
-        Document.getElementById("sb-left").innerText = "HIS/RIS v1.0.0 — Servicios inactivos"
+        Document.getElementById("sb-left").innerText = "Dimed HIS/RIS v1.0.0 — Servicios inactivos"
     End If
 End Sub
 

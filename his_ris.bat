@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title HIS/RIS Sistema Hospitalario
+title Dimed HIS/RIS
 
 :: ════════════════════════════════════════════════════════════════
 ::  HIS/RIS — Menu de Gestion (Windows)
@@ -11,7 +11,7 @@ title HIS/RIS Sistema Hospitalario
 cls
 echo.
 echo  ╔══════════════════════════════════════════════════════╗
-echo  ║         HIS/RIS  Sistema Hospitalario                ║
+echo  ║              Dimed HIS/RIS                           ║
 echo  ╠══════════════════════════════════════════════════════╣
 echo  ║  SERVICIOS                                           ║
 echo  ║    [1]  Iniciar sistema          (docker compose up) ║
@@ -342,7 +342,7 @@ goto MENU
 :FIN
 cls
 echo.
-echo  HIS/RIS — Sistema detenido. Hasta luego.
+echo  Dimed HIS/RIS — Sistema detenido. Hasta luego.
 echo.
 endlocal
 exit /b 0

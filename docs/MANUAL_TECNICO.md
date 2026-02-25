@@ -1,4 +1,4 @@
-# Manual Técnico — HIS/RIS Sistema Hospitalario
+# Manual Técnico — Dimed HIS/RIS
 
 **Versión:** 1.0.0 | **Stack:** FastAPI · React · PostgreSQL · Docker · Orthanc
 

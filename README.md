@@ -1,4 +1,4 @@
-# HIS/RIS Sistema Hospitalario + RIS Integrado con PACS Orthanc
+# Dimed HIS/RIS
 
 Sistema completo de Información Hospitalaria (HIS) y Radiológica (RIS) con integración PACS Orthanc, DICOM MWL, HL7 v2.x y FHIR R4.
 

@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="Sistema HIS/RIS Hospitalario integrado con PACS Orthanc, DICOM MWL, HL7 v2.x y FHIR R4",
+    description="Dimed HIS/RIS — Sistema de Información Hospitalaria y Radiológica integrado con PACS Orthanc, DICOM MWL, HL7 v2.x y FHIR R4",
     docs_url="/docs" if settings.is_development else None,
     redoc_url="/redoc" if settings.is_development else None,
     openapi_url="/openapi.json" if settings.is_development else None,

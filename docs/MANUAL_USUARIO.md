@@ -1,4 +1,4 @@
-# Manual de Usuario — HIS/RIS Sistema Hospitalario
+# Manual de Usuario — Dimed HIS/RIS
 
 **Versión:** 1.0.0
 **Fecha:** Febrero 2026
@@ -23,7 +23,7 @@
 
 ## 1. Introducción
 
-El **HIS/RIS Sistema Hospitalario** es una plataforma web integrada que cubre:
+El **Dimed HIS/RIS** es una plataforma web integrada que cubre:
 
 - **HIS** (Hospital Information System): registro de pacientes, encuentros clínicos.
 - **RIS** (Radiology Information System): órdenes de imagen, informes radiológicos, firma digital.

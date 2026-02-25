@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     # ── App ────────────────────────────────────────────────────────────
-    app_name: str = "HIS/RIS Sistema Hospitalario"
+    app_name: str = "Dimed HIS/RIS"
     app_version: str = "1.0.0"
     environment: str = "development"
     debug: bool = False

@@ -53,7 +53,7 @@ export default function MainLayout() {
             </div>
             {sidebarOpen && (
               <div>
-                <p className="font-bold text-gray-900 text-sm">HIS/RIS</p>
+                <p className="font-bold text-gray-900 text-sm">Dimed HIS/RIS</p>
                 <p className="text-xs text-gray-500">Sistema Hospitalario</p>
               </div>
             )}
