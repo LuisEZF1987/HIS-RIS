@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="x-ua-compatible" content="ie=11">
+<title>HIS/RIS — Panel de Control</title>
+<HTA:APPLICATION
+  ID="HisRisApp"
+  APPLICATIONNAME="HIS/RIS Sistema Hospitalario"
+  CAPTION="yes"
+  SHOWINTASKBAR="yes"
+  SINGLEINSTANCE="yes"
+  WINDOWSTATE="normal"
+  MINIMIZEBUTTON="yes"
+  MAXIMIZEBUTTON="yes"
+  SCROLL="no"
+  INNERBORDER="no"
+  SELECTION="no"
+  CONTEXTMENU="no"
+/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: Segoe UI, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    overflow: hidden;
+  }
+
+  /* ── Title bar ── */
+  #titlebar {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2b6cb0 100%);
+    color: white;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+  }
+  #titlebar .logo { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+  #titlebar .sub  { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+  #titlebar .badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+  }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%;
+         background:#68d391; margin-right:6px; }
+  .dot.red { background:#fc8181; }
+
+  /* ── Main layout ── */
+  #main {
+    display: flex;
+    height: calc(100vh - 62px);
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 220px;
+    background: #1a202c;
+    padding: 16px 10px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .nav-section {
+    color: #718096;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 10px 10px 6px;
+    margin-top: 8px;
+  }
+  .nav-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #cbd5e0;
+    font-size: 13px;
+    padding: 9px 12px;
+    text-align: left;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    transition: background 0.15s;
+  }
+  .nav-btn:hover  { background: #2d3748; color: white; }
+  .nav-btn.active { background: #2b6cb0; color: white; }
+  .nav-btn .icon  { margin-right: 8px; }
+  .nav-btn.danger:hover { background: #742a2a; color: #fc8181; }
+
+  /* ── Content panel ── */
+  #content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Cards grid ── */
+  #cards {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px 12px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .card {
+    flex: 1;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .card .label { font-size: 11px; color: #718096; font-weight: 600; }
+  .card .value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+  .card.blue .value   { color: #2b6cb0; }
+  .card.green .value  { color: #276749; }
+  .card.orange .value { color: #c05621; }
+  .card.red .value    { color: #c53030; }
+
+  /* ── Log area ── */
+  #log-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px 16px;
+    overflow: hidden;
+  }
+  #log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 8px;
+  }
+  #log-header .title { font-weight: 600; font-size: 14px; color: #2d3748; }
+  #btn-clear {
+    background: none;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #718096;
+  }
+  #btn-clear:hover { background: #edf2f7; }
+  #log {
+    flex: 1;
+    background: #1a202c;
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-y: auto;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #e2e8f0;
+  }
+  .log-ok     { color: #68d391; }
+  .log-err    { color: #fc8181; }
+  .log-info   { color: #63b3ed; }
+  .log-warn   { color: #f6e05e; }
+  .log-cmd    { color: #9ae6b4; opacity: 0.7; }
+  .log-header-line { color: #a0aec0; border-bottom: 1px solid #2d3748; padding-bottom: 4px; margin-bottom: 8px; }
+  .spinner    { color: #f6e05e; }
+
+  /* ── Modal ── */
+  #modal-overlay {
+    display: none;
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #modal-overlay.show { display: flex; }
+  #modal {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  #modal h3 { font-size: 16px; margin-bottom: 12px; color: #1a202c; }
+  #modal p  { font-size: 13px; color: #4a5568; margin-bottom: 20px; line-height: 1.6; }
+  #modal .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-confirm {
+    background: #c53030; color: white;
+    border: none; border-radius: 7px;
+    padding: 8px 20px; font-size: 13px; cursor: pointer;
+  }
+  .btn-cancel {
+    background: #edf2f7; color: #2d3748;
+    border: none; border-radius: 7px;
+    padding: 8px 20px; font-size: 13px; cursor: pointer;
+  }
+  .btn-confirm:hover { background: #9b2c2c; }
+  .btn-cancel:hover  { background: #e2e8f0; }
+
+  /* ── Status bar ── */
+  #statusbar {
+    background: #2d3748;
+    color: #a0aec0;
+    font-size: 11px;
+    padding: 4px 20px;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- Title bar -->
+<div id="titlebar">
+  <div>
+    <div class="logo">&#9877; HIS/RIS</div>
+    <div class="sub">Sistema Hospitalario — Panel de Control</div>
+  </div>
+  <div id="status-badge" class="badge">
+    <span class="dot red" id="status-dot"></span>
+    <span id="status-text">Verificando...</span>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="nav-section">Servicios</div>
+    <button class="nav-btn" onclick="cmd_up()">
+      <span class="icon">&#9654;</span> Iniciar sistema
+    </button>
+    <button class="nav-btn" onclick="cmd_down()">
+      <span class="icon">&#9646;&#9646;</span> Detener sistema
+    </button>
+    <button class="nav-btn" onclick="cmd_restart()">
+      <span class="icon">&#8635;</span> Reiniciar
+    </button>
+    <button class="nav-btn" onclick="cmd_build()">
+      <span class="icon">&#9881;</span> Reconstruir imagenes
+    </button>
+    <button class="nav-btn" onclick="cmd_status()">
+      <span class="icon">&#9723;</span> Ver estado servicios
+    </button>
+
+    <div class="nav-section">Base de Datos</div>
+    <button class="nav-btn" onclick="cmd_migrate()">
+      <span class="icon">&#8659;</span> Migraciones
+    </button>
+    <button class="nav-btn" onclick="cmd_seed()">
+      <span class="icon">&#9670;</span> Cargar datos iniciales
+    </button>
+    <button class="nav-btn" onclick="cmd_backup()">
+      <span class="icon">&#128190;</span> Backup BD
+    </button>
+
+    <div class="nav-section">Primer Arranque</div>
+    <button class="nav-btn" onclick="cmd_setup()">
+      <span class="icon">&#10003;</span> Configuracion inicial
+    </button>
+
+    <div class="nav-section">Diagnostico</div>
+    <button class="nav-btn" onclick="cmd_health()">
+      <span class="icon">&#10084;</span> Health check
+    </button>
+    <button class="nav-btn" onclick="cmd_logs_api()">
+      <span class="icon">&#9998;</span> Logs API (50 lineas)
+    </button>
+
+    <div class="nav-section">Acceso Rapido</div>
+    <button class="nav-btn" onclick="openUrl('http://localhost:8080')">
+      <span class="icon">&#127760;</span> Abrir sistema
+    </button>
+    <button class="nav-btn" onclick="openUrl('http://localhost:8000/docs')">
+      <span class="icon">&#128196;</span> API Docs
+    </button>
+    <button class="nav-btn" onclick="openUrl('http://localhost:8043')">
+      <span class="icon">&#128248;</span> Orthanc PACS
+    </button>
+
+    <div class="nav-section">Peligro</div>
+    <button class="nav-btn danger" onclick="showModal()">
+      <span class="icon">&#128465;</span> Limpiar sistema
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- Cards -->
+    <div id="cards">
+      <div class="card blue">
+        <div class="label">SISTEMA</div>
+        <div class="value" id="card-url">:8080</div>
+      </div>
+      <div class="card green">
+        <div class="label">API</div>
+        <div class="value" id="card-api">:8000</div>
+      </div>
+      <div class="card orange">
+        <div class="label">ORTHANC PACS</div>
+        <div class="value" id="card-orthanc">:8043</div>
+      </div>
+      <div class="card red">
+        <div class="label">HL7 MLLP</div>
+        <div class="value">:2575</div>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div id="log-area">
+      <div id="log-header">
+        <span class="title">&#9654; Consola de salida</span>
+        <button id="btn-clear" onclick="clearLog()">Limpiar</button>
+      </div>
+      <div id="log">
+        <div class="log-header-line">HIS/RIS Panel de Control — listo.</div>
+        <div class="log-info">Seleccione una opcion del menu lateral para comenzar.</div>
+        <div class="log-info">&#160;</div>
+        <div class="log-cmd">Accesos directos:</div>
+        <div class="log-cmd">  Sistema  &#9658; http://localhost:8080</div>
+        <div class="log-cmd">  API Docs &#9658; http://localhost:8000/docs</div>
+        <div class="log-cmd">  Orthanc  &#9658; http://localhost:8043</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div id="statusbar">
+  <span id="sb-left">HIS/RIS v1.0.0 — Windows Panel</span>
+  <span id="sb-time"></span>
+</div>
+
+<!-- Modal limpiar -->
+<div id="modal-overlay">
+  <div id="modal">
+    <h3>&#9888; Accion destructiva</h3>
+    <p>
+      Esto eliminara <strong>todos los contenedores y volumenes</strong>,
+      incluyendo la base de datos completa.<br><br>
+      Esta accion <strong>NO se puede deshacer</strong>.
+    </p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="hideModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="cmd_clean()">Confirmar borrado</button>
+    </div>
+  </div>
+</div>
+
+<script language="VBScript">
+
+' ── Obtener directorio del HTA ──────────────────────────────────
+Function GetBaseDir()
+    Dim path
+    path = Location.PathName
+    ' quitar nombre del archivo
+    GetBaseDir = Left(path, InStrRev(path, "\") - 1)
+End Function
+
+Dim BASE_DIR
+BASE_DIR = GetBaseDir()
+
+' ── Shell helper ────────────────────────────────────────────────
+Function RunCmd(cmd, wait)
+    Dim shell, result
+    Set shell = CreateObject("WScript.Shell")
+    Dim fullCmd
+    fullCmd = "cmd.exe /c cd /d """ & BASE_DIR & """ && " & cmd
+    If wait Then
+        result = shell.Run(fullCmd, 0, True)
+        RunCmd = result
+    Else
+        shell.Run fullCmd, 0, False
+        RunCmd = 0
+    End If
+End Function
+
+Function RunCmdCapture(cmd)
+    Dim shell, exec, out
+    Set shell = CreateObject("WScript.Shell")
+    Dim fullCmd
+    fullCmd = "cmd.exe /c cd /d """ & BASE_DIR & """ && " & cmd & " 2>&1"
+    Set exec = shell.Exec(fullCmd)
+    out = ""
+    Do While Not exec.StdOut.AtEndOfStream
+        out = out & exec.StdOut.ReadLine() & Chr(10)
+    Loop
+    RunCmdCapture = out
+End Function
+
+' ── Log helpers ─────────────────────────────────────────────────
+Sub AppendLog(msg, cssClass)
+    Dim logDiv
+    Set logDiv = Document.getElementById("log")
+    Dim el
+    Set el = Document.createElement("div")
+    el.className = cssClass
+    el.innerText = msg
+    logDiv.appendChild(el)
+    logDiv.scrollTop = logDiv.scrollHeight
+End Sub
+
+Sub LogCmd(msg)  : AppendLog "> " & msg, "log-cmd"   : End Sub
+Sub LogOk(msg)   : AppendLog msg, "log-ok"   : End Sub
+Sub LogErr(msg)  : AppendLog msg, "log-err"  : End Sub
+Sub LogInfo(msg) : AppendLog msg, "log-info" : End Sub
+Sub LogWarn(msg) : AppendLog msg, "log-warn" : End Sub
+Sub LogSep()
+    AppendLog String(50, "-"), "log-cmd"
+End Sub
+
+Sub SetStatus(text, isOk)
+    Dim dot, span
+    Set dot  = Document.getElementById("status-dot")
+    Set span = Document.getElementById("status-text")
+    span.innerText = text
+    If isOk Then
+        dot.className = "dot"
+    Else
+        dot.className = "dot red"
+    End If
+End Sub
+
+Sub SetSbLeft(msg)
+    Document.getElementById("sb-left").innerText = msg
+End Sub
+
+' ── Comandos ────────────────────────────────────────────────────
+
+Sub cmd_up()
+    LogSep
+    LogInfo "Iniciando servicios..."
+    LogCmd "docker compose up -d"
+    Dim ret
+    ret = RunCmd("docker compose up -d", True)
+    If ret = 0 Then
+        LogOk "Servicios iniciados correctamente."
+        LogOk "  Sistema : http://localhost:8080"
+        LogOk "  API     : http://localhost:8000"
+        LogOk "  Orthanc : http://localhost:8043"
+        SetStatus "Ejecutando", True
+    Else
+        LogErr "Error al iniciar servicios. Codigo: " & ret
+        SetStatus "Error", False
+    End If
+End Sub
+
+Sub cmd_down()
+    LogSep
+    LogInfo "Deteniendo servicios..."
+    LogCmd "docker compose down"
+    RunCmd "docker compose down", True
+    LogOk "Servicios detenidos."
+    SetStatus "Detenido", False
+End Sub
+
+Sub cmd_restart()
+    LogSep
+    LogInfo "Reiniciando sistema..."
+    LogCmd "docker compose down && docker compose up -d"
+    RunCmd "docker compose down", True
+    RunCmd "docker compose up -d", True
+    LogOk "Sistema reiniciado."
+    SetStatus "Ejecutando", True
+End Sub
+
+Sub cmd_build()
+    LogSep
+    LogWarn "Reconstruyendo imagenes Docker (puede tardar varios minutos)..."
+    LogCmd "docker compose build"
+    RunCmd "docker compose build", True
+    LogOk "Imagenes reconstruidas."
+End Sub
+
+Sub cmd_status()
+    LogSep
+    LogInfo "Estado de contenedores:"
+    LogCmd "docker compose ps"
+    Dim out
+    out = RunCmdCapture("docker compose ps")
+    Dim lines, line
+    lines = Split(out, Chr(10))
+    For Each line In lines
+        If Len(Trim(line)) > 0 Then
+            If InStr(line, "running") > 0 Or InStr(line, "Up") > 0 Then
+                AppendLog "  " & line, "log-ok"
+            ElseIf InStr(line, "Exit") > 0 Or InStr(line, "exited") > 0 Then
+                AppendLog "  " & line, "log-err"
+            Else
+                AppendLog "  " & line, "log-cmd"
+            End If
+        End If
+    Next
+End Sub
+
+Sub cmd_migrate()
+    LogSep
+    LogInfo "Ejecutando migraciones Alembic..."
+    LogCmd "docker compose exec api alembic upgrade head"
+    Dim out
+    out = RunCmdCapture("docker compose exec api alembic upgrade head")
+    Dim lines, line
+    lines = Split(out, Chr(10))
+    For Each line In lines
+        If Len(Trim(line)) > 0 Then AppendLog "  " & line, "log-info"
+    Next
+    LogOk "Migraciones completadas."
+End Sub
+
+Sub cmd_seed()
+    LogSep
+    LogInfo "Cargando datos iniciales..."
+    LogCmd "docker compose exec api python -m app.db.seed"
+    Dim out
+    out = RunCmdCapture("docker compose exec api python -m app.db.seed")
+    Dim lines, line
+    lines = Split(out, Chr(10))
+    For Each line In lines
+        If Len(Trim(line)) > 0 Then AppendLog "  " & line, "log-info"
+    Next
+    LogOk "Datos iniciales cargados."
+    LogOk "  admin / Admin123!   receptionist / Recep123!"
+    LogOk "  tecnico / Tecnico123!   radiologo / Radiologo123!   medico / Medico123!"
+End Sub
+
+Sub cmd_backup()
+    LogSep
+    LogInfo "Realizando backup de PostgreSQL..."
+    Dim shell, dt, ts, archivo
+    Set shell = CreateObject("WScript.Shell")
+    dt = Now()
+    ts = Year(dt) & Right("0"&Month(dt),2) & Right("0"&Day(dt),2) & "_" & _
+         Right("0"&Hour(dt),2) & Right("0"&Minute(dt),2)
+    archivo = "backups\backup_his_ris_" & ts & ".sql"
+    LogCmd "pg_dump > " & archivo
+
+    ' crear carpeta backups si no existe
+    Dim fso
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(BASE_DIR & "\backups") Then
+        fso.CreateFolder(BASE_DIR & "\backups")
+    End If
+
+    Dim ret
+    ret = RunCmd("docker compose exec -T postgres pg_dump -U his_ris_user his_ris > """ & archivo & """", True)
+    If ret = 0 Then
+        LogOk "Backup guardado en: " & archivo
+    Else
+        LogErr "Error al realizar backup."
+    End If
+End Sub
+
+Sub cmd_health()
+    LogSep
+    LogInfo "Verificando salud del sistema..."
+    Dim out
+
+    LogCmd "curl http://localhost:8000/health"
+    out = RunCmdCapture("curl -s --connect-timeout 3 http://localhost:8000/health")
+    If Len(Trim(out)) > 0 Then
+        AppendLog "  API: " & out, "log-ok"
+    Else
+        AppendLog "  API: sin respuesta", "log-err"
+    End If
+
+    LogCmd "curl http://localhost:8043/system (Orthanc)"
+    out = RunCmdCapture("curl -s --connect-timeout 3 -u orthanc:orthanc http://localhost:8043/system")
+    If InStr(out, "Version") > 0 Then
+        AppendLog "  Orthanc: OK", "log-ok"
+    Else
+        AppendLog "  Orthanc: sin respuesta", "log-err"
+    End If
+
+    LogCmd "pg_isready"
+    out = RunCmdCapture("docker compose exec postgres pg_isready -U his_ris_user -d his_ris")
+    If InStr(out, "accepting") > 0 Then
+        AppendLog "  PostgreSQL: OK", "log-ok"
+    Else
+        AppendLog "  PostgreSQL: " & Trim(out), "log-err"
+    End If
+
+    LogCmd "redis-cli ping"
+    out = RunCmdCapture("docker compose exec redis redis-cli ping")
+    If Trim(out) = "PONG" Then
+        AppendLog "  Redis: PONG", "log-ok"
+    Else
+        AppendLog "  Redis: " & Trim(out), "log-err"
+    End If
+End Sub
+
+Sub cmd_logs_api()
+    LogSep
+    LogInfo "Ultimas 50 lineas de logs de la API:"
+    LogCmd "docker compose logs --tail=50 api"
+    Dim out
+    out = RunCmdCapture("docker compose logs --tail=50 api")
+    Dim lines, line
+    lines = Split(out, Chr(10))
+    For Each line In lines
+        If Len(Trim(line)) > 0 Then
+            If InStr(LCase(line), "error") > 0 Then
+                AppendLog line, "log-err"
+            ElseIf InStr(LCase(line), "warn") > 0 Then
+                AppendLog line, "log-warn"
+            ElseIf InStr(LCase(line), "info") > 0 Then
+                AppendLog line, "log-info"
+            Else
+                AppendLog line, "log-cmd"
+            End If
+        End If
+    Next
+End Sub
+
+Sub cmd_setup()
+    LogSep
+    LogWarn "=== CONFIGURACION INICIAL ==="
+    LogInfo "1/4 Generando claves JWT (RSA 2048)..."
+    Dim fso
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(BASE_DIR & "\infrastructure\keys") Then
+        fso.CreateFolder(BASE_DIR & "\infrastructure\keys")
+    End If
+    RunCmd "docker run --rm -v """ & BASE_DIR & "\infrastructure\keys:/keys"" alpine/openssl genrsa -out /keys/private_key.pem 2048", True
+    RunCmd "docker run --rm -v """ & BASE_DIR & "\infrastructure\keys:/keys"" alpine/openssl rsa -in /keys/private_key.pem -pubout -out /keys/public_key.pem", True
+    LogOk "   Claves generadas."
+
+    LogInfo "2/4 Iniciando servicios (build + up)..."
+    RunCmd "docker compose up -d --build", True
+    LogOk "   Servicios iniciados."
+
+    LogInfo "3/4 Ejecutando migraciones..."
+    RunCmd "docker compose exec api alembic upgrade head", True
+    LogOk "   Migraciones OK."
+
+    LogInfo "4/4 Cargando datos iniciales..."
+    RunCmd "docker compose exec api python -m app.db.seed", True
+    LogOk "   Seed OK."
+
+    LogSep
+    LogOk "INSTALACION COMPLETADA."
+    LogOk "  Sistema : http://localhost:8080"
+    LogOk "  Usuario : admin / Admin123!"
+    SetStatus "Ejecutando", True
+End Sub
+
+Sub cmd_clean()
+    HideModal
+    LogSep
+    LogWarn "!!! LIMPIANDO SISTEMA — borrando contenedores y volumenes !!!"
+    LogCmd "docker compose down -v --remove-orphans"
+    RunCmd "docker compose down -v --remove-orphans", True
+    LogOk "Sistema limpiado."
+    LogInfo "Ejecute 'Configuracion inicial' para reinstalar."
+    SetStatus "Detenido", False
+End Sub
+
+' ── Modal ────────────────────────────────────────────────────────
+Sub ShowModal()
+    Document.getElementById("modal-overlay").className = "show"
+End Sub
+Sub HideModal()
+    Document.getElementById("modal-overlay").className = ""
+End Sub
+
+' ── Abrir URL ────────────────────────────────────────────────────
+Sub openUrl(url)
+    Dim shell
+    Set shell = CreateObject("WScript.Shell")
+    shell.Run "explorer """ & url & """", 1, False
+End Sub
+
+' ── Limpiar log ─────────────────────────────────────────────────
+Sub clearLog()
+    Document.getElementById("log").innerHTML = _
+        "<div class=""log-header-line"">Consola limpiada.</div>"
+End Sub
+
+' ── Clock ────────────────────────────────────────────────────────
+Sub UpdateClock()
+    Document.getElementById("sb-time").innerText = Now()
+End Sub
+
+' ── Auto-health check al inicio ─────────────────────────────────
+Sub AutoCheck()
+    Dim out
+    out = RunCmdCapture("curl -s --connect-timeout 2 http://localhost:8000/health")
+    If InStr(out, "ok") > 0 Or InStr(out, "healthy") > 0 Or Len(Trim(out)) > 0 Then
+        SetStatus "Ejecutando", True
+        Document.getElementById("sb-left").innerText = "HIS/RIS v1.0.0 — Servicios activos"
+    Else
+        SetStatus "Detenido", False
+        Document.getElementById("sb-left").innerText = "HIS/RIS v1.0.0 — Servicios inactivos"
+    End If
+End Sub
+
+</script>
+
+<script language="JavaScript">
+// Resize window
+window.resizeTo(950, 680);
+window.moveTo(
+  (screen.width  - 950) / 2,
+  (screen.height - 680) / 2
+);
+
+// Clock update
+setInterval(function() {
+  try { UpdateClock(); } catch(e){}
+}, 1000);
+
+// Initial health check
+setTimeout(function() {
+  try { AutoCheck(); } catch(e){}
+}, 800);
+</script>
+
+</body>
+</html>
