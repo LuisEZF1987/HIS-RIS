@@ -14,7 +14,7 @@ export interface CreateOrderData {
 }
 
 export const ordersApi = {
-  list: (params: { status?: string; modality?: string; patient_id?: number; page?: number }) =>
+  list: (params: { status?: string; modality?: string; patient_id?: number; page?: number; page_size?: number }) =>
     apiClient.get<PaginatedResponse<ImagingOrder>>('/orders', { params }).then((r) => r.data),
 
   get: (id: number) =>

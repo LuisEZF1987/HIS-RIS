@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/authStore'
 import { ordersApi } from '@/api/orders'
 import { patientsApi } from '@/api/patients'
-import { Users, ClipboardList, ListChecks, Activity, TrendingUp } from 'lucide-react'
+import { reportsApi } from '@/api/reports'
+import { Users, ClipboardList, ListChecks, Activity, TrendingUp, FileText } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 function StatCard({ title, value, icon: Icon, color, to }: {
@@ -45,6 +46,13 @@ export default function DashboardPage() {
     queryKey: ['worklist'],
     queryFn: () => ordersApi.getWorklist(),
     enabled: ['admin', 'technician', 'radiologist'].includes(user?.role || ''),
+  })
+
+  const { data: pendingStudies } = useQuery({
+    queryKey: ['studies', 'pending-report'],
+    queryFn: () => reportsApi.listStudies(),
+    enabled: ['admin', 'radiologist'].includes(user?.role || ''),
+    select: (studies) => studies.filter((s) => !s.report_id),
   })
 
   const getGreeting = () => {
@@ -94,6 +102,15 @@ export default function DashboardPage() {
           color="bg-green-500"
           to="/worklist"
         />
+        {['admin', 'radiologist'].includes(user?.role || '') && (
+          <StatCard
+            title="Sin Informe"
+            value={pendingStudies?.length}
+            icon={FileText}
+            color="bg-red-500"
+            to="/reports"
+          />
+        )}
       </div>
 
       {/* Recent orders */}
