@@ -8,8 +8,10 @@ import { patientsApi } from '@/api/patients'
 import { useForm, Controller } from 'react-hook-form'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import toast from 'react-hot-toast'
-import { Plus, X, CalendarPlus, Search } from 'lucide-react'
-import type { PatientListItem } from '@/types'
+import { Plus, X, CalendarPlus, Search, User, Clock, FileText, ExternalLink, Calendar as CalendarIcon } from 'lucide-react'
+import type { PatientListItem, Appointment } from '@/types'
+import { Link } from 'react-router-dom'
+import { format as fmtDate, parseISO } from 'date-fns'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = { es }
@@ -37,6 +39,26 @@ const inputClass =
   'placeholder-gray-400 dark:placeholder-slate-500'
 
 const labelClass = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1'
+
+const statusLabels: Record<string, string> = {
+  proposed: 'Propuesta',
+  pending: 'Pendiente',
+  booked: 'Confirmada',
+  arrived: 'Llegó',
+  fulfilled: 'Completada',
+  cancelled: 'Cancelada',
+  noshow: 'No asistió',
+}
+
+const statusColors: Record<string, string> = {
+  proposed: 'bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-300',
+  pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  booked: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  arrived: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  fulfilled: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  noshow: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+}
 
 // ── Patient search widget ────────────────────────────────────────────────────
 function PatientSearchField({
@@ -116,11 +138,133 @@ function PatientSearchField({
   )
 }
 
+// ── Appointment detail modal ─────────────────────────────────────────────────
+function AppointmentDetailModal({
+  appointment,
+  onClose,
+}: {
+  appointment: Appointment
+  onClose: () => void
+}) {
+  const formatDT = (dt: string) => {
+    try {
+      return fmtDate(parseISO(dt), "EEEE dd 'de' MMMM yyyy, HH:mm", { locale: es })
+    } catch {
+      return dt
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Detalles de la Cita</h2>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[appointment.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                {statusLabels[appointment.status] ?? appointment.status}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-1"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+
+          {/* Patient */}
+          <div className="flex items-start gap-3">
+            <User className="w-5 h-5 text-gray-400 dark:text-slate-500 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">Paciente</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">
+                {appointment.patient_name ?? `Paciente #${appointment.patient_id}`}
+              </p>
+            </div>
+            <Link
+              to={`/patients/${appointment.patient_id}`}
+              onClick={onClose}
+              className="shrink-0 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+            >
+              Ver ficha
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {/* Procedure */}
+          {appointment.procedure_description && (
+            <div className="flex items-start gap-3">
+              <FileText className="w-5 h-5 text-gray-400 dark:text-slate-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">Estudio / Procedimiento</p>
+                <p className="text-sm text-gray-900 dark:text-slate-100">{appointment.procedure_description}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Date / Time */}
+          <div className="flex items-start gap-3">
+            <Clock className="w-5 h-5 text-gray-400 dark:text-slate-500 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">Fecha y Hora</p>
+              <p className="text-sm text-gray-900 dark:text-slate-100 capitalize">
+                {formatDT(appointment.start_datetime)}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                Duración: {appointment.duration_minutes} min
+              </p>
+            </div>
+          </div>
+
+          {/* Order ID */}
+          {appointment.order_id && (
+            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg px-4 py-2.5 text-sm">
+              <span className="text-gray-500 dark:text-slate-400">Orden vinculada: </span>
+              <span className="font-mono font-semibold text-gray-900 dark:text-slate-100">#{appointment.order_id}</span>
+            </div>
+          )}
+
+          {/* Notes */}
+          {appointment.notes && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800 rounded-lg px-4 py-2.5">
+              <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 uppercase tracking-wide mb-1">Notas</p>
+              <p className="text-sm text-yellow-900 dark:text-yellow-200">{appointment.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6">
+          <Link
+            to={`/patients/${appointment.patient_id}`}
+            onClick={onClose}
+            className="flex items-center justify-center gap-2 w-full bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+          >
+            <User className="w-4 h-4" />
+            Ver Ficha del Paciente
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function SchedulePage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showModal, setShowModal] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<number>(0)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const queryClient = useQueryClient()
 
   const { data: appointments } = useQuery({
@@ -178,6 +322,10 @@ export default function SchedulePage() {
     }
   })
 
+  const handleSelectEvent = useCallback((event: any) => {
+    setSelectedAppointment(event.resource as Appointment)
+  }, [])
+
   const closeModal = () => {
     setShowModal(false)
     setSelectedPatientId(0)
@@ -216,6 +364,7 @@ export default function SchedulePage() {
           endAccessor="end"
           date={currentDate}
           onNavigate={setCurrentDate}
+          onSelectEvent={handleSelectEvent}
           culture="es"
           messages={{
             next: 'Siguiente',
@@ -233,8 +382,16 @@ export default function SchedulePage() {
       {/* Info note */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
         <p className="font-semibold mb-1">Nota</p>
-        <p>Las <strong>órdenes con fecha programada</strong> crean cita automáticamente. También puede crearlas manualmente aquí.</p>
+        <p>Las <strong>órdenes con fecha programada</strong> crean cita automáticamente. También puede crearlas manualmente aquí. Haga <strong>clic en una cita</strong> para ver los detalles.</p>
       </div>
+
+      {/* Appointment detail modal */}
+      {selectedAppointment && (
+        <AppointmentDetailModal
+          appointment={selectedAppointment}
+          onClose={() => setSelectedAppointment(null)}
+        />
+      )}
 
       {/* Create Appointment Modal */}
       {showModal && (

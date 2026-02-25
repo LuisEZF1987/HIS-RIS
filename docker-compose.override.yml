@@ -29,15 +29,5 @@ services:
     volumes:
       - ./backend:/app
 
-  frontend:
-    build:
-      dockerfile: Dockerfile.dev
-    command: npm run dev -- --host 0.0.0.0 --port 3000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    environment:
-      - VITE_API_BASE_URL=/api/v1
-      - VITE_ORTHANC_URL=http://localhost:8043
+  # frontend uses production Dockerfile (static build served by nginx on :80)
+  # Override removed so docker-compose.yml production Dockerfile is used

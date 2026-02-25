@@ -91,14 +91,17 @@ class ReportService:
         return await self.get_by_id(report.id)
 
     async def sign_report(self, report_id: int, password: str, user: User) -> RadiologyReport:
+        from app.models.user import UserRole
+
         # Re-authenticate
         if not verify_password(password, user.hashed_password):
-            raise ForbiddenError("Invalid password for digital signature")
+            raise ForbiddenError("Contraseña incorrecta. Ingrese su contraseña de inicio de sesión.")
 
         report = await self.get_by_id(report_id)
 
-        if report.radiologist_id != user.id:
-            raise ForbiddenError("Only the assigned radiologist can sign this report")
+        # Admin can sign any report; radiologists can only sign their own
+        if user.role != UserRole.admin and report.radiologist_id != user.id:
+            raise ForbiddenError("Solo el radiólogo asignado o un administrador puede firmar este informe")
 
         if report.status == ReportStatus.final:
             raise BadRequestError("Report is already signed")
