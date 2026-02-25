@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
@@ -8,7 +8,8 @@ import { patientsApi } from '@/api/patients'
 import { useForm, Controller } from 'react-hook-form'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import toast from 'react-hot-toast'
-import { Plus, X, CalendarPlus } from 'lucide-react'
+import { Plus, X, CalendarPlus, Search } from 'lucide-react'
+import type { PatientListItem } from '@/types'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = { es }
@@ -37,9 +38,89 @@ const inputClass =
 
 const labelClass = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1'
 
+// ── Patient search widget ────────────────────────────────────────────────────
+function PatientSearchField({
+  value,
+  onChange,
+}: {
+  value: number | undefined
+  onChange: (id: number, name: string) => void
+}) {
+  const [searchText, setSearchText] = useState('')
+  const [selectedName, setSelectedName] = useState('')
+  const [open, setOpen] = useState(false)
+
+  const { data: results } = useQuery({
+    queryKey: ['patients-search', searchText],
+    queryFn: () => patientsApi.list({ q: searchText, page: 1, page_size: 6 }),
+    enabled: searchText.length >= 2,
+  })
+
+  const selectPatient = (p: PatientListItem) => {
+    onChange(p.id, p.full_name)
+    setSelectedName(`${p.full_name} (MRN: ${p.mrn})`)
+    setSearchText('')
+    setOpen(false)
+  }
+
+  if (value && selectedName) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="flex-1 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg text-sm text-green-800 dark:text-green-300">
+          ✓ {selectedName}
+        </span>
+        <button
+          type="button"
+          onClick={() => { setSelectedName(''); onChange(0, '') }}
+          className="text-gray-400 hover:text-red-500"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500" />
+        <input
+          type="text"
+          value={searchText}
+          onChange={(e) => { setSearchText(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder="Buscar por nombre, MRN o cédula..."
+          className={`${inputClass} pl-9`}
+        />
+      </div>
+      {open && results && results.items.length > 0 && (
+        <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg overflow-hidden">
+          {results.items.map((p) => (
+            <li
+              key={p.id}
+              onMouseDown={() => selectPatient(p)}
+              className="px-4 py-2.5 hover:bg-primary-50 dark:hover:bg-slate-700 cursor-pointer text-sm"
+            >
+              <span className="font-medium text-gray-900 dark:text-slate-100">{p.full_name}</span>
+              <span className="text-gray-500 dark:text-slate-400 ml-2 text-xs">MRN: {p.mrn}{p.dni ? ` · CI: ${p.dni}` : ''}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && searchText.length >= 2 && results?.items.length === 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow p-3 text-sm text-gray-500 dark:text-slate-400">
+          No se encontraron pacientes
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function SchedulePage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showModal, setShowModal] = useState(false)
+  const [selectedPatientId, setSelectedPatientId] = useState<number>(0)
   const queryClient = useQueryClient()
 
   const { data: appointments } = useQuery({
@@ -47,22 +128,19 @@ export default function SchedulePage() {
     queryFn: () => scheduleApi.listAppointments({}),
   })
 
-  // Fetch patient names for events display
   const { data: resources } = useQuery({
     queryKey: ['resources'],
     queryFn: () => scheduleApi.getResources(),
   })
 
-  const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm<AppointmentForm>({
+  const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<AppointmentForm>({
     defaultValues: { duration_minutes: 30 },
   })
 
-  const patientId = watch('patient_id')
-  const { data: selectedPatient } = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: () => patientsApi.get(Number(patientId)),
-    enabled: !!patientId && Number(patientId) > 0,
-  })
+  const handlePatientSelect = useCallback((id: number, _name: string) => {
+    setSelectedPatientId(id)
+    setValue('patient_id', id)
+  }, [setValue])
 
   const mutation = useMutation({
     mutationFn: (data: AppointmentForm) =>
@@ -76,6 +154,7 @@ export default function SchedulePage() {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       toast.success('Cita creada exitosamente')
       setShowModal(false)
+      setSelectedPatientId(0)
       reset()
     },
     onError: (err: any) => {
@@ -83,13 +162,27 @@ export default function SchedulePage() {
     },
   })
 
-  const events = (appointments || []).map((a) => ({
-    id: a.id,
-    title: `Paciente #${a.patient_id}${a.notes ? ' — ' + a.notes : ''}`,
-    start: new Date(a.start_datetime),
-    end: new Date(a.end_datetime),
-    resource: a,
-  }))
+  // Build enriched calendar events
+  const events = (appointments || []).map((a) => {
+    const title = [
+      a.patient_name ?? `Paciente #${a.patient_id}`,
+      a.procedure_description ?? a.notes,
+    ].filter(Boolean).join(' — ')
+
+    return {
+      id: a.id,
+      title,
+      start: new Date(a.start_datetime),
+      end: new Date(a.end_datetime),
+      resource: a,
+    }
+  })
+
+  const closeModal = () => {
+    setShowModal(false)
+    setSelectedPatientId(0)
+    reset()
+  }
 
   return (
     <div className="space-y-6">
@@ -139,12 +232,8 @@ export default function SchedulePage() {
 
       {/* Info note */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
-        <p className="font-semibold mb-1">Nota sobre la Agenda</p>
-        <p>
-          Las <strong>órdenes</strong> de imagen son solicitudes de estudios.
-          Las <strong>citas</strong> son la asignación de fecha/hora/sala.
-          Use el botón <em>Nueva Cita</em> para agendar una orden ya creada.
-        </p>
+        <p className="font-semibold mb-1">Nota</p>
+        <p>Las <strong>órdenes con fecha programada</strong> crean cita automáticamente. También puede crearlas manualmente aquí.</p>
       </div>
 
       {/* Create Appointment Modal */}
@@ -152,7 +241,6 @@ export default function SchedulePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
 
-            {/* Modal header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -163,32 +251,23 @@ export default function SchedulePage() {
                   <p className="text-xs text-gray-500 dark:text-slate-400">Asignar fecha, hora y sala</p>
                 </div>
               </div>
-              <button
-                onClick={() => { setShowModal(false); reset() }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200"
-              >
+              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
 
-              {/* Patient ID */}
+              {/* Patient search */}
               <div>
-                <label className={labelClass}>ID Paciente *</label>
-                <input
-                  {...register('patient_id', { required: 'Requerido', valueAsNumber: true })}
-                  type="number"
-                  className={inputClass}
-                  placeholder="Ingrese el ID del paciente"
+                <label className={labelClass}>Paciente *</label>
+                <input type="hidden" {...register('patient_id', { required: true, min: 1 })} />
+                <PatientSearchField
+                  value={selectedPatientId || undefined}
+                  onChange={handlePatientSelect}
                 />
                 {errors.patient_id && (
-                  <p className="text-red-500 text-xs mt-1">{errors.patient_id.message}</p>
-                )}
-                {selectedPatient && (
-                  <p className="text-green-600 dark:text-green-400 text-xs mt-1">
-                    ✓ {selectedPatient.full_name} (MRN: {selectedPatient.mrn})
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">Seleccione un paciente</p>
                 )}
               </div>
 
@@ -203,7 +282,7 @@ export default function SchedulePage() {
                 />
               </div>
 
-              {/* Resource (optional) */}
+              {/* Resource */}
               {resources && resources.length > 0 && (
                 <div>
                   <label className={labelClass}>Sala / Equipo (opcional)</label>
@@ -248,26 +327,20 @@ export default function SchedulePage() {
               {/* Notes */}
               <div>
                 <label className={labelClass}>Notas</label>
-                <textarea
-                  {...register('notes')}
-                  className={inputClass}
-                  rows={2}
-                  placeholder="Observaciones..."
-                />
+                <textarea {...register('notes')} className={inputClass} rows={2} placeholder="Observaciones..." />
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); reset() }}
+                  onClick={closeModal}
                   className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  disabled={mutation.isPending}
+                  disabled={mutation.isPending || !selectedPatientId}
                   className="flex-1 bg-primary-600 text-white py-2.5 rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium text-sm"
                 >
                   {mutation.isPending ? 'Guardando...' : 'Crear Cita'}

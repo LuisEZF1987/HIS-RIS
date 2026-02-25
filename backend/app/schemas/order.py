@@ -29,6 +29,17 @@ class ImagingOrderUpdate(BaseModel):
     special_instructions: Optional[str] = None
 
 
+class ImagingOrderEdit(BaseModel):
+    """Full editable fields (for admin/receptionist corrections)."""
+    modality: Optional[Modality] = None
+    procedure_description: Optional[str] = Field(None, min_length=3, max_length=500)
+    procedure_code: Optional[str] = Field(None, max_length=50)
+    body_part: Optional[str] = Field(None, max_length=100)
+    priority: Optional[OrderPriority] = None
+    clinical_indication: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
+
+
 class ImagingOrderResponse(BaseModel):
     id: int
     patient_id: int

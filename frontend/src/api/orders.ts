@@ -13,6 +13,16 @@ export interface CreateOrderData {
   scheduled_at?: string
 }
 
+export interface EditOrderData {
+  modality?: string
+  procedure_description?: string
+  procedure_code?: string
+  body_part?: string
+  priority?: string
+  clinical_indication?: string
+  scheduled_at?: string
+}
+
 export const ordersApi = {
   list: (params: { status?: string; modality?: string; patient_id?: number; page?: number; page_size?: number }) =>
     apiClient.get<PaginatedResponse<ImagingOrder>>('/orders', { params }).then((r) => r.data),
@@ -22,6 +32,12 @@ export const ordersApi = {
 
   create: (data: CreateOrderData) =>
     apiClient.post<ImagingOrder>('/orders', data).then((r) => r.data),
+
+  edit: (id: number, data: EditOrderData) =>
+    apiClient.put<ImagingOrder>(`/orders/${id}`, data).then((r) => r.data),
+
+  cancel: (id: number) =>
+    apiClient.delete(`/orders/${id}`),
 
   updateStatus: (id: number, data: { status?: string; scheduled_at?: string; priority?: string }) =>
     apiClient.put<ImagingOrder>(`/orders/${id}/status`, data).then((r) => r.data),

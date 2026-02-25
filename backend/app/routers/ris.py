@@ -12,7 +12,7 @@ from app.models.order import ImagingOrder
 from app.models.report import RadiologyReport
 from app.models.study import ImagingStudy, StudyStatus
 from app.schemas.order import (
-    ImagingOrderCreate, ImagingOrderResponse, ImagingOrderUpdate,
+    ImagingOrderCreate, ImagingOrderEdit, ImagingOrderResponse, ImagingOrderUpdate,
     PaginatedOrders, WorklistEntryResponse,
 )
 from app.schemas.study import ImagingStudyResponse
@@ -67,11 +67,27 @@ async def get_order(order_id: int, db: DBSession):
     return await svc.get_by_id(order_id)
 
 
+@router.put("/orders/{order_id}", response_model=ImagingOrderResponse,
+            dependencies=[require_permission("orders:write")])
+async def edit_order(order_id: int, data: ImagingOrderEdit, db: DBSession, current_user: CurrentUser):
+    """Full edit of an order (admin/receptionist)."""
+    svc = OrderService(db)
+    return await svc.edit_order(order_id, data)
+
+
 @router.put("/orders/{order_id}/status", response_model=ImagingOrderResponse,
             dependencies=[require_permission("orders:write")])
 async def update_order_status(order_id: int, data: ImagingOrderUpdate, db: DBSession, current_user: CurrentUser):
     svc = OrderService(db)
     return await svc.update_status(order_id, data)
+
+
+@router.delete("/orders/{order_id}", status_code=204,
+               dependencies=[require_permission("orders:delete")])
+async def cancel_order(order_id: int, db: DBSession, current_user: CurrentUser):
+    """Cancel an order (admin/receptionist)."""
+    svc = OrderService(db)
+    await svc.cancel_order(order_id)
 
 
 @router.get("/worklist", response_model=list[WorklistEntryResponse],

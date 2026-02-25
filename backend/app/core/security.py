@@ -30,10 +30,10 @@ ROLE_PERMISSIONS: dict[UserRole, list[str]] = {
         "audit:read",
     ],
     UserRole.receptionist: [
-        "patients:read", "patients:write",
+        "patients:read", "patients:write", "patients:delete",
         "encounters:read", "encounters:write",
         "appointments:read", "appointments:write",
-        "orders:read",
+        "orders:read", "orders:write", "orders:delete",
     ],
     UserRole.technician: [
         "patients:read",

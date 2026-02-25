@@ -11,7 +11,7 @@ from app.core.exceptions import BadRequestError, NotFoundError
 from app.models.order import ImagingOrder, OrderStatus, generate_accession_number
 from app.models.patient import Patient
 from app.models.worklist import DicomWorklistEntry, WorklistStatus
-from app.schemas.order import ImagingOrderCreate, ImagingOrderUpdate
+from app.schemas.order import ImagingOrderCreate, ImagingOrderEdit, ImagingOrderUpdate
 from app.services.worklist_service import WorklistService
 from app.services.schedule_service import ScheduleService
 from app.schemas.schedule import AppointmentCreate
@@ -105,6 +105,28 @@ class OrderService:
         stmt = stmt.order_by(ImagingOrder.requested_at.desc()).offset((page - 1) * page_size).limit(page_size)
         orders = (await self.db.execute(stmt)).scalars().all()
         return list(orders), total
+
+    async def edit_order(self, order_id: int, data: ImagingOrderEdit) -> ImagingOrder:
+        """Edit editable fields of an existing order (admin/receptionist)."""
+        order = await self.get_by_id(order_id)
+        if order.status in (OrderStatus.completed, OrderStatus.cancelled):
+            raise BadRequestError("Cannot edit a completed or cancelled order")
+        for field, value in data.model_dump(exclude_none=True).items():
+            setattr(order, field, value)
+        if data.scheduled_at and order.status == OrderStatus.requested:
+            order.status = OrderStatus.scheduled
+        await self.db.flush()
+        return order
+
+    async def cancel_order(self, order_id: int) -> ImagingOrder:
+        """Cancel an order and its worklist entry."""
+        order = await self.get_by_id(order_id)
+        if order.status == OrderStatus.completed:
+            raise BadRequestError("Cannot cancel a completed order")
+        order.status = OrderStatus.cancelled
+        await self.worklist_svc.complete_worklist_entry(order.accession_number)
+        await self.db.flush()
+        return order
 
     async def update_status(self, order_id: int, data: ImagingOrderUpdate) -> ImagingOrder:
         order = await self.get_by_id(order_id)

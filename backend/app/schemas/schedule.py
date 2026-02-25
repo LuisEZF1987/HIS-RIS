@@ -61,6 +61,9 @@ class AppointmentResponse(BaseModel):
     duration_minutes: int
     notes: Optional[str] = None
     created_at: datetime
+    # Enriched fields (populated by the list endpoint)
+    patient_name: Optional[str] = None
+    procedure_description: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

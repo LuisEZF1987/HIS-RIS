@@ -11,8 +11,11 @@ from app.schemas.schedule import (
     ResourceCreate, ResourceResponse, SlotResponse,
 )
 from app.services.schedule_service import ScheduleService
-from app.models.schedule import Resource
+from app.models.schedule import Appointment, Resource
+from app.models.patient import Patient
+from app.models.order import ImagingOrder
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(tags=["Scheduling"])
 
@@ -71,7 +74,43 @@ async def list_appointments(
     date_to: Optional[datetime] = None,
 ):
     svc = ScheduleService(db)
-    return await svc.list_appointments(patient_id, resource_id, date_from, date_to)
+    appts = await svc.list_appointments(patient_id, resource_id, date_from, date_to)
+
+    # Enrich with patient name and order description
+    results = []
+    for a in appts:
+        patient_name: Optional[str] = None
+        procedure_description: Optional[str] = None
+
+        if a.patient_id:
+            p_result = await db.execute(select(Patient).where(Patient.id == a.patient_id))
+            patient = p_result.scalar_one_or_none()
+            if patient:
+                patient_name = patient.full_name
+
+        if a.order_id:
+            o_result = await db.execute(select(ImagingOrder).where(ImagingOrder.id == a.order_id))
+            order = o_result.scalar_one_or_none()
+            if order:
+                procedure_description = order.procedure_description
+
+        response = AppointmentResponse(
+            id=a.id,
+            patient_id=a.patient_id,
+            order_id=a.order_id,
+            resource_id=a.resource_id,
+            status=a.status,
+            start_datetime=a.start_datetime,
+            end_datetime=a.end_datetime,
+            duration_minutes=a.duration_minutes,
+            notes=a.notes,
+            created_at=a.created_at,
+            patient_name=patient_name,
+            procedure_description=procedure_description,
+        )
+        results.append(response)
+
+    return results
 
 
 @router.put("/appointments/{appt_id}", response_model=AppointmentResponse,

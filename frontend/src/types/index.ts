@@ -216,6 +216,8 @@ export interface Appointment {
   duration_minutes: number
   notes?: string
   created_at: string
+  patient_name?: string
+  procedure_description?: string
 }
 
 export interface TimeSlot {
