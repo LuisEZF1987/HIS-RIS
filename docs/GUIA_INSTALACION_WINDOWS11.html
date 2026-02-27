@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía de Instalación en Windows 11 — Dimed HIS/RIS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 32px 16px;
+      line-height: 1.6;
+    }
+    .page {
+      max-width: 920px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      padding: 32px 40px;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header .subtitle { margin-top: 6px; opacity: .82; font-size: 13px; }
+    .badge {
+      display: inline-block;
+      margin-top: 14px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .body { padding: 36px 40px; }
+
+    .toc {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px 28px;
+      margin-bottom: 32px;
+    }
+    .toc h2 { font-size: 15px; color: #334155; margin-bottom: 10px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin: 5px 0; }
+    .toc a { color: #2563eb; text-decoration: none; font-size: 13px; }
+    .toc a:hover { text-decoration: underline; }
+
+    h2 {
+      font-size: 18px;
+      color: #1e3a5f;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 6px;
+      margin: 36px 0 16px;
+    }
+    h3 { font-size: 15px; color: #334155; margin: 20px 0 10px; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 24px; }
+    li { margin: 4px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    th {
+      background: #1e3a5f;
+      color: #fff;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    td { border-bottom: 1px solid #e2e8f0; padding: 8px 12px; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    .note {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    .note strong { color: #1e40af; }
+    .warning { background: #fef3c7; border-left-color: #d97706; }
+    .warning strong { color: #92400e; }
+    .success { background: #dcfce7; border-left-color: #16a34a; }
+    .success strong { color: #166534; }
+    .danger { background: #fee2e2; border-left-color: #dc2626; }
+    .danger strong { color: #991b1b; }
+
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      color: #be185d;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-size: 12px;
+      margin: 10px 0;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      line-height: 1.5;
+    }
+    pre .comment { color: #64748b; }
+    pre .highlight { color: #38bdf8; }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 14px;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .step-title {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin: 28px 0 12px;
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0;
+    }
+    .checklist li {
+      padding: 6px 0 6px 28px;
+      position: relative;
+    }
+    .checklist li::before {
+      content: '☐';
+      position: absolute;
+      left: 4px;
+      font-size: 15px;
+    }
+
+    .time-badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+      font-size: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; font-size: 11px; }
+      .page { box-shadow: none; }
+      h2 { break-after: avoid; }
+      pre { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>Guía de Instalación en Windows 11</h1>
+    <div class="subtitle">Dimed HIS/RIS — Paso a paso desde una máquina nueva</div>
+    <span class="badge">Febrero 2026 — Tiempo estimado: 30-45 minutos</span>
+  </div>
+
+  <div class="body">
+
+    <!-- TOC -->
+    <div class="toc">
+      <h2>Contenido</h2>
+      <ol>
+        <li><a href="#prereq">Requisitos Previos</a></li>
+        <li><a href="#s1">Paso 1 — Activar virtualización en BIOS</a></li>
+        <li><a href="#s2">Paso 2 — Instalar WSL2</a></li>
+        <li><a href="#s3">Paso 3 — Instalar Docker Desktop</a></li>
+        <li><a href="#s4">Paso 4 — Instalar Git para Windows</a></li>
+        <li><a href="#s5">Paso 5 — Clonar el proyecto HIS/RIS</a></li>
+        <li><a href="#s6">Paso 6 — Configurar variables de entorno</a></li>
+        <li><a href="#s7">Paso 7 — Generar claves JWT</a></li>
+        <li><a href="#s8">Paso 8 — Construir e iniciar los servicios</a></li>
+        <li><a href="#s9">Paso 9 — Ejecutar migraciones y datos iniciales</a></li>
+        <li><a href="#s10">Paso 10 — Verificar la instalación</a></li>
+        <li><a href="#s11">Paso 11 — Configurar Firewall para acceso en red</a></li>
+        <li><a href="#s12">Paso 12 — Acceso desde otras máquinas</a></li>
+        <li><a href="#trouble">Solución de Problemas</a></li>
+      </ol>
+    </div>
+
+    <!-- ═══ Requisitos ═══ -->
+    <h2 id="prereq">Requisitos Previos</h2>
+    <table>
+      <tr><th>Requisito</th><th>Mínimo</th><th>Recomendado</th></tr>
+      <tr><td>Sistema Operativo</td><td>Windows 11 Home/Pro</td><td>Windows 11 Pro</td></tr>
+      <tr><td>CPU</td><td>4 cores (con virtualización)</td><td>8 cores</td></tr>
+      <tr><td>RAM</td><td>8 GB</td><td>16 GB</td></tr>
+      <tr><td>Disco libre</td><td>20 GB</td><td>50+ GB</td></tr>
+      <tr><td>Conexión a Internet</td><td>Sí (para descarga inicial)</td><td>—</td></tr>
+    </table>
+
+    <div class="note">
+      <strong>Requisito clave:</strong> La virtualización por hardware (Intel VT-x o AMD-V) debe estar habilitada en el BIOS. Sin esto, Docker no funcionará.
+    </div>
+
+    <p><strong>Lo que vamos a instalar:</strong></p>
+    <ul class="checklist">
+      <li>WSL2 (Windows Subsystem for Linux 2)</li>
+      <li>Docker Desktop para Windows</li>
+      <li>Git para Windows</li>
+      <li>El proyecto HIS/RIS (código fuente)</li>
+    </ul>
+
+    <!-- ═══ Paso 1 ═══ -->
+    <div class="step-title" id="s1"><span class="step-number">1</span> Activar virtualización en BIOS <span class="time-badge">5 min</span></div>
+
+    <p>Primero verificar si la virtualización ya está activa:</p>
+    <ol>
+      <li>Presione <code>Ctrl + Shift + Esc</code> para abrir el <strong>Administrador de Tareas</strong>.</li>
+      <li>Vaya a la pestaña <strong>Rendimiento</strong> → <strong>CPU</strong>.</li>
+      <li>Busque el campo <strong>"Virtualización"</strong>. Si dice <strong>"Habilitado"</strong>, pase al Paso 2.</li>
+    </ol>
+
+    <p>Si dice "Deshabilitado", debe activarlo en el BIOS:</p>
+    <ol>
+      <li>Reinicie la computadora.</li>
+      <li>Al encender, presione la tecla del BIOS (varía según fabricante):
+        <ul>
+          <li><strong>Dell/Lenovo:</strong> F2</li>
+          <li><strong>HP:</strong> F10 o Esc</li>
+          <li><strong>ASUS:</strong> F2 o Del</li>
+          <li><strong>Acer:</strong> F2 o Del</li>
+        </ul>
+      </li>
+      <li>Busque la opción de virtualización:
+        <ul>
+          <li><strong>Intel:</strong> "Intel VT-x" o "Intel Virtualization Technology"</li>
+          <li><strong>AMD:</strong> "AMD-V" o "SVM Mode"</li>
+        </ul>
+      </li>
+      <li>Cambie a <strong>Enabled</strong>.</li>
+      <li>Guarde y reinicie (generalmente <code>F10</code> → Yes).</li>
+    </ol>
+
+    <!-- ═══ Paso 2 ═══ -->
+    <div class="step-title" id="s2"><span class="step-number">2</span> Instalar WSL2 <span class="time-badge">5-10 min</span></div>
+
+    <p>Abra <strong>PowerShell como Administrador</strong> (clic derecho en Inicio → "Terminal (Administrador)"):</p>
+    <pre>wsl --install</pre>
+
+    <p>Este comando instala WSL2 y Ubuntu automáticamente. Al terminar:</p>
+    <ol>
+      <li><strong>Reinicie la computadora</strong> cuando se lo pida.</li>
+      <li>Después de reiniciar, se abrirá una ventana de Ubuntu pidiendo crear un usuario y contraseña. Complete esto (el usuario/contraseña es solo para Ubuntu, no afecta a Windows).</li>
+    </ol>
+
+    <p>Verifique que WSL2 está activo (en PowerShell):</p>
+    <pre>wsl --status</pre>
+    <p>Debe mostrar "Versión predeterminada: 2".</p>
+
+    <!-- ═══ Paso 3 ═══ -->
+    <div class="step-title" id="s3"><span class="step-number">3</span> Instalar Docker Desktop <span class="time-badge">10 min</span></div>
+
+    <ol>
+      <li>Descargue Docker Desktop desde:<br>
+        <code>https://www.docker.com/products/docker-desktop/</code><br>
+        Haga clic en <strong>"Download for Windows"</strong>.
+      </li>
+      <li>Ejecute el instalador <code>Docker Desktop Installer.exe</code>.</li>
+      <li>En la pantalla de configuración, asegúrese de que esté marcado:
+        <ul>
+          <li><strong>"Use WSL 2 instead of Hyper-V"</strong> (recomendado)</li>
+          <li><strong>"Add shortcut to desktop"</strong> (opcional)</li>
+        </ul>
+      </li>
+      <li>Haga clic en <strong>Ok</strong> y espere a que termine.</li>
+      <li><strong>Reinicie la computadora</strong> si se lo solicita.</li>
+      <li>Abra <strong>Docker Desktop</strong> desde el menú Inicio.</li>
+      <li>Acepte los términos de servicio.</li>
+      <li>Espere a que el motor Docker se inicie (el icono de la ballena en la barra de tareas dejará de mostrar "starting...").</li>
+    </ol>
+
+    <p>Verifique la instalación abriendo PowerShell:</p>
+    <pre>docker --version
+<span class="comment"># Ejemplo de salida: Docker version 27.x.x, build xxxxxxx</span>
+
+docker compose version
+<span class="comment"># Ejemplo de salida: Docker Compose version v2.x.x</span></pre>
+
+    <div class="success note">
+      <strong>Listo:</strong> Si ambos comandos muestran versiones, Docker está correctamente instalado.
+    </div>
+
+    <div class="warning note">
+      <strong>Nota sobre licencia:</strong> Docker Desktop es gratuito para uso personal, educación, pequeñas empresas (menos de 250 empleados y menos de $10M de ingresos), y proyectos open source. Verifique si su organización requiere una licencia paga.
+    </div>
+
+    <!-- ═══ Paso 4 ═══ -->
+    <div class="step-title" id="s4"><span class="step-number">4</span> Instalar Git para Windows <span class="time-badge">3 min</span></div>
+
+    <ol>
+      <li>Descargue Git desde:<br>
+        <code>https://git-scm.com/download/win</code><br>
+        Se descargará automáticamente la versión de 64 bits.
+      </li>
+      <li>Ejecute el instalador.</li>
+      <li>Acepte todos los valores por defecto (Next → Next → Install).</li>
+      <li>Al final, puede desmarcar "View Release Notes" y hacer clic en <strong>Finish</strong>.</li>
+    </ol>
+
+    <p>Verifique en PowerShell:</p>
+    <pre>git --version
+<span class="comment"># Ejemplo: git version 2.47.1.windows.1</span></pre>
+
+    <!-- ═══ Paso 5 ═══ -->
+    <div class="step-title" id="s5"><span class="step-number">5</span> Clonar el proyecto HIS/RIS <span class="time-badge">2 min</span></div>
+
+    <p>Abra PowerShell (no necesita ser Administrador) y ejecute:</p>
+    <pre><span class="comment"># Ir a la raíz del disco (o la carpeta que prefiera)</span>
+cd C:\
+
+<span class="comment"># Clonar el repositorio</span>
+git clone https://github.com/LuisEZF1987/HIS-RIS.git HIS_RIS
+
+<span class="comment"># Entrar al proyecto</span>
+cd C:\HIS_RIS</pre>
+
+    <div class="note">
+      <strong>Alternativa si ya tiene los archivos en USB/red:</strong> Simplemente copie la carpeta del proyecto a <code>C:\HIS_RIS</code>. No necesita Git si ya tiene los archivos.
+    </div>
+
+    <!-- ═══ Paso 6 ═══ -->
+    <div class="step-title" id="s6"><span class="step-number">6</span> Configurar variables de entorno <span class="time-badge">3 min</span></div>
+
+    <p>Desde PowerShell, en la carpeta del proyecto:</p>
+    <pre><span class="comment"># Copiar el archivo de ejemplo</span>
+copy .env.example .env
+
+<span class="comment"># Abrir con Notepad para editar</span>
+notepad .env</pre>
+
+    <p>Modifique los siguientes valores para producción:</p>
+    <pre><span class="comment"># Cambiar las contraseñas por defecto:</span>
+POSTGRES_PASSWORD=<span class="highlight">SuClaveSegura2026!</span>
+DATABASE_URL=postgresql+asyncpg://his_ris_user:<span class="highlight">SuClaveSegura2026!</span>@postgres:5432/his_ris
+
+<span class="comment"># Nombre de su institución:</span>
+INSTITUTION_NAME=<span class="highlight">Su Hospital o Centro de Imagen</span>
+
+<span class="comment"># Modo producción:</span>
+ENVIRONMENT=production
+
+<span class="comment"># IP/URL desde donde se accederá (su IP de red local):</span>
+ALLOWED_ORIGINS=http://localhost:8080,http://<span class="highlight">192.168.X.X</span>:8080</pre>
+
+    <p>Guarde y cierre Notepad (<code>Ctrl+S</code>).</p>
+
+    <div class="warning note">
+      <strong>Importante:</strong> Reemplace <code>192.168.X.X</code> con la IP real de esta máquina en la red local. Para averiguarla, ejecute <code>ipconfig</code> en PowerShell y busque la "Dirección IPv4" del adaptador de red activo.
+    </div>
+
+    <!-- ═══ Paso 7 ═══ -->
+    <div class="step-title" id="s7"><span class="step-number">7</span> Generar claves JWT <span class="time-badge">1 min</span></div>
+
+    <p>Las claves JWT protegen las sesiones de usuario. Abra <strong>Git Bash</strong> (se instaló con Git; búsquelo en el menú Inicio):</p>
+    <pre><span class="comment"># Ir al proyecto</span>
+cd /c/HIS_RIS
+
+<span class="comment"># Crear la carpeta de claves</span>
+mkdir -p infrastructure/keys
+
+<span class="comment"># Generar clave privada (2048 bits RSA)</span>
+openssl genrsa -out infrastructure/keys/private_key.pem 2048
+
+<span class="comment"># Generar clave pública</span>
+openssl rsa -in infrastructure/keys/private_key.pem \
+        -pubout -out infrastructure/keys/public_key.pem</pre>
+
+    <div class="success note">
+      <strong>Verificación:</strong> Debe tener dos archivos en <code>C:\HIS_RIS\infrastructure\keys\</code>: <code>private_key.pem</code> y <code>public_key.pem</code>.
+    </div>
+
+    <div class="note">
+      <strong>Alternativa:</strong> Si el script existe, puede ejecutar: <code>bash infrastructure/scripts/generate-keys.sh</code>
+    </div>
+
+    <!-- ═══ Paso 8 ═══ -->
+    <div class="step-title" id="s8"><span class="step-number">8</span> Construir e iniciar los servicios <span class="time-badge">10-15 min</span></div>
+
+    <p>Regrese a <strong>PowerShell</strong> (o siga en Git Bash):</p>
+    <pre><span class="comment"># Ir al proyecto</span>
+cd C:\HIS_RIS
+
+<span class="comment"># Construir todas las imágenes Docker (primera vez toma más tiempo)</span>
+docker compose -f docker-compose.yml build
+
+<span class="comment"># Iniciar todos los servicios en segundo plano</span>
+docker compose -f docker-compose.yml up -d</pre>
+
+    <div class="note">
+      <strong>Primera vez:</strong> Docker descargará las imágenes base (PostgreSQL, Redis, Orthanc, Node, Python). Esto puede tomar 10-15 minutos dependiendo de la velocidad de Internet. Las siguientes veces será mucho más rápido.
+    </div>
+
+    <p>Espere 30-60 segundos y verifique que todos los servicios estén arriba:</p>
+    <pre>docker compose -f docker-compose.yml ps</pre>
+
+    <p>Todos los servicios deben mostrar <strong>"Up"</strong> o <strong>"Up (healthy)"</strong>:</p>
+    <pre>NAME                   STATUS          PORTS
+his_ris_nginx          Up (healthy)    0.0.0.0:8080-&gt;80/tcp
+his_ris_api            Up (healthy)    0.0.0.0:8000-&gt;8000/tcp
+his_ris_frontend       Up              80/tcp
+his_ris_postgres       Up (healthy)    0.0.0.0:5432-&gt;5432/tcp
+his_ris_redis          Up (healthy)    0.0.0.0:6379-&gt;6379/tcp
+his_ris_orthanc        Up (healthy)    0.0.0.0:8043-&gt;8042/tcp</pre>
+
+    <!-- ═══ Paso 9 ═══ -->
+    <div class="step-title" id="s9"><span class="step-number">9</span> Ejecutar migraciones y datos iniciales <span class="time-badge">1 min</span></div>
+
+    <pre><span class="comment"># Crear las tablas en la base de datos</span>
+docker compose -f docker-compose.yml exec api alembic upgrade head
+
+<span class="comment"># Cargar usuarios y datos iniciales</span>
+docker compose -f docker-compose.yml exec api python -m app.db.seed</pre>
+
+    <div class="success note">
+      <strong>Listo:</strong> El sistema ya tiene los usuarios por defecto creados. Vea la tabla de usuarios en la sección de verificación.
+    </div>
+
+    <!-- ═══ Paso 10 ═══ -->
+    <div class="step-title" id="s10"><span class="step-number">10</span> Verificar la instalación <span class="time-badge">2 min</span></div>
+
+    <h3>10.1 — Verificar el API</h3>
+    <p>Abra un navegador y vaya a:</p>
+    <pre>http://localhost:8000/health</pre>
+    <p>Debe ver una respuesta JSON con <code>"status": "healthy"</code>.</p>
+
+    <h3>10.2 — Acceder al sistema</h3>
+    <p>Abra el navegador en:</p>
+    <pre>http://localhost:8080</pre>
+    <p>Debe ver la pantalla de inicio de sesión de Dimed HIS/RIS.</p>
+
+    <h3>10.3 — Iniciar sesión</h3>
+    <p>Use las credenciales del administrador:</p>
+    <table>
+      <tr><th>Campo</th><th>Valor</th></tr>
+      <tr><td>Usuario</td><td><code>admin</code></td></tr>
+      <tr><td>Contraseña</td><td><code>Admin123!</code></td></tr>
+    </table>
+
+    <h3>10.4 — Todos los usuarios disponibles</h3>
+    <table>
+      <tr><th>Usuario</th><th>Contraseña</th><th>Rol</th></tr>
+      <tr><td>admin</td><td><code>Admin123!</code></td><td>Administrador</td></tr>
+      <tr><td>receptionist</td><td><code>Recep123!</code></td><td>Recepcionista</td></tr>
+      <tr><td>tecnico</td><td><code>Tecnico123!</code></td><td>Técnico</td></tr>
+      <tr><td>radiologo</td><td><code>Radiologo123!</code></td><td>Radiólogo</td></tr>
+      <tr><td>medico</td><td><code>Medico123!</code></td><td>Médico</td></tr>
+    </table>
+
+    <div class="warning note">
+      <strong>Importante:</strong> Cambie las contraseñas por defecto desde Administración → Usuarios antes de poner el sistema en producción.
+    </div>
+
+    <h3>10.5 — Verificar Orthanc PACS</h3>
+    <p>Abra en el navegador:</p>
+    <pre>http://localhost:8043</pre>
+    <p>Credenciales: <code>orthanc</code> / <code>orthanc</code> (o la contraseña que configuró en el <code>.env</code>).</p>
+
+    <!-- ═══ Paso 11 ═══ -->
+    <div class="step-title" id="s11"><span class="step-number">11</span> Configurar Firewall para acceso en red <span class="time-badge">3 min</span></div>
+
+    <p>Para que otras computadoras de la red local puedan acceder al sistema, debe abrir los puertos en el Firewall de Windows.</p>
+
+    <p>Abra <strong>PowerShell como Administrador</strong> y ejecute:</p>
+    <pre><span class="comment"># Puerto principal del sistema (web)</span>
+netsh advfirewall firewall add rule name="HIS_RIS Web (8080)" ^
+  dir=in action=allow protocol=TCP localport=8080
+
+<span class="comment"># Puerto DICOM (para equipos de imagen)</span>
+netsh advfirewall firewall add rule name="HIS_RIS DICOM (4243)" ^
+  dir=in action=allow protocol=TCP localport=4243
+
+<span class="comment"># Puerto HL7 MLLP (si integra con otros sistemas)</span>
+netsh advfirewall firewall add rule name="HIS_RIS HL7 (2575)" ^
+  dir=in action=allow protocol=TCP localport=2575
+
+<span class="comment"># Puerto Orthanc HTTP (para visor web DICOM)</span>
+netsh advfirewall firewall add rule name="HIS_RIS Orthanc (8043)" ^
+  dir=in action=allow protocol=TCP localport=8043</pre>
+
+    <div class="note">
+      <strong>Alternativa gráfica:</strong> Busque "Firewall de Windows Defender con seguridad avanzada" en el menú Inicio → Reglas de entrada → Nueva regla → Puerto → TCP → 8080, 4243, 2575, 8043 → Permitir la conexión → Aplicar a todos los perfiles → Nombre: "HIS_RIS".
+    </div>
+
+    <!-- ═══ Paso 12 ═══ -->
+    <div class="step-title" id="s12"><span class="step-number">12</span> Acceso desde otras máquinas <span class="time-badge">1 min</span></div>
+
+    <p>Primero, averigüe la IP del servidor:</p>
+    <pre>ipconfig</pre>
+    <p>Busque la <strong>Dirección IPv4</strong> del adaptador de red activo (ejemplo: <code>192.168.100.12</code>).</p>
+
+    <h3>Desde cualquier computadora de la red:</h3>
+    <table>
+      <tr><th>Servicio</th><th>URL</th></tr>
+      <tr><td>Sistema HIS/RIS</td><td><code>http://192.168.100.12:8080</code></td></tr>
+      <tr><td>Orthanc PACS</td><td><code>http://192.168.100.12:8043</code></td></tr>
+    </table>
+
+    <div class="success note">
+      <strong>Las computadoras cliente no necesitan instalar nada.</strong> Solo necesitan un navegador web moderno (Chrome, Edge, Firefox). Abren la URL y pueden usar el sistema inmediatamente.
+    </div>
+
+    <h3>Configurar equipos DICOM (CT, MR, CR, etc.)</h3>
+    <table>
+      <tr><th>Parámetro en el equipo</th><th>Valor</th></tr>
+      <tr><td>AE Title destino</td><td><code>ORTHANC</code></td></tr>
+      <tr><td>Host / IP</td><td><code>192.168.100.12</code> (IP del servidor)</td></tr>
+      <tr><td>Puerto C-STORE</td><td><code>4243</code></td></tr>
+      <tr><td>Puerto C-FIND (Worklist)</td><td><code>4243</code></td></tr>
+    </table>
+
+    <!-- ═══ Troubleshooting ═══ -->
+    <h2 id="trouble">Solución de Problemas</h2>
+
+    <h3>Docker Desktop no inicia</h3>
+    <ul>
+      <li>Verifique que la virtualización está habilitada en BIOS (Paso 1).</li>
+      <li>Verifique que WSL2 está instalado: <code>wsl --status</code></li>
+      <li>Intente: <code>wsl --update</code> y reinicie Docker Desktop.</li>
+    </ul>
+
+    <h3>Error "port already in use" al iniciar</h3>
+    <p>Otro programa está usando un puerto requerido. Para verificar qué lo usa:</p>
+    <pre>netstat -ano | findstr :8080
+<span class="comment"># El último número es el PID del proceso</span>
+tasklist | findstr &lt;PID&gt;</pre>
+    <p>Cierre ese programa o cambie el puerto en <code>docker-compose.yml</code>.</p>
+
+    <h3>El navegador muestra "No se puede acceder a este sitio"</h3>
+    <ul>
+      <li>Verifique que Docker Desktop está corriendo (icono de ballena en la barra de tareas).</li>
+      <li>Verifique que los contenedores están arriba: <code>docker compose -f docker-compose.yml ps</code></li>
+      <li>Si algún contenedor está "Restarting", revise sus logs: <code>docker compose -f docker-compose.yml logs api</code></li>
+    </ul>
+
+    <h3>Error 502 Bad Gateway</h3>
+    <p>Nginx perdió conexión con el API. Solución:</p>
+    <pre>docker compose -f docker-compose.yml restart nginx</pre>
+
+    <h3>Los contenedores no están "healthy"</h3>
+    <pre><span class="comment"># Ver logs del servicio con problemas</span>
+docker compose -f docker-compose.yml logs api
+docker compose -f docker-compose.yml logs postgres
+
+<span class="comment"># Reiniciar todos los servicios</span>
+docker compose -f docker-compose.yml down
+docker compose -f docker-compose.yml up -d</pre>
+
+    <h3>Errores de migración de base de datos</h3>
+    <p>Si la migración falla, el PostgreSQL podría no estar listo aún. Espere 30 segundos y reintente:</p>
+    <pre>docker compose -f docker-compose.yml exec api alembic upgrade head</pre>
+
+    <h3>Reiniciar todo desde cero</h3>
+    <div class="danger note">
+      <strong>ADVERTENCIA: Esto borra TODOS los datos.</strong> Solo usar si la instalación está irrecuperable.
+    </div>
+    <pre><span class="comment"># Detener y eliminar TODO (contenedores + datos)</span>
+docker compose -f docker-compose.yml down -v
+
+<span class="comment"># Reconstruir e iniciar</span>
+docker compose -f docker-compose.yml build
+docker compose -f docker-compose.yml up -d
+
+<span class="comment"># Esperar 30 segundos y ejecutar migraciones</span>
+docker compose -f docker-compose.yml exec api alembic upgrade head
+docker compose -f docker-compose.yml exec api python -m app.db.seed</pre>
+
+    <!-- ═══ Arranque automático ═══ -->
+    <h2>Arranque Automático con Windows</h2>
+    <p>Para que el sistema inicie automáticamente al encender el servidor:</p>
+    <ol>
+      <li>Abra <strong>Docker Desktop</strong> → Settings (engranaje) → General.</li>
+      <li>Marque <strong>"Start Docker Desktop when you sign in to Windows"</strong>.</li>
+      <li>Marque <strong>"Start Docker Desktop when you log in"</strong>.</li>
+    </ol>
+    <p>Docker Desktop inicia automáticamente todos los contenedores que estaban corriendo cuando se apagó la máquina.</p>
+
+    <div class="note">
+      <strong>Alternativa avanzada:</strong> Puede crear un script <code>his_ris.bat</code> en la carpeta de Inicio de Windows (<code>shell:startup</code>) con el contenido:<br><br>
+      <code>cd /d C:\HIS_RIS &amp;&amp; docker compose -f docker-compose.yml up -d</code>
+    </div>
+
+    <!-- ═══ Resumen ═══ -->
+    <h2>Resumen de URLs del Sistema</h2>
+    <table>
+      <tr><th>Servicio</th><th>URL Local</th><th>URL en Red</th></tr>
+      <tr><td>Sistema HIS/RIS</td><td><code>http://localhost:8080</code></td><td><code>http://&lt;IP&gt;:8080</code></td></tr>
+      <tr><td>API Health Check</td><td><code>http://localhost:8000/health</code></td><td><code>http://&lt;IP&gt;:8000/health</code></td></tr>
+      <tr><td>API Docs (Swagger)</td><td><code>http://localhost:8000/docs</code></td><td>—</td></tr>
+      <tr><td>Orthanc PACS</td><td><code>http://localhost:8043</code></td><td><code>http://&lt;IP&gt;:8043</code></td></tr>
+    </table>
+
+  </div><!-- .body -->
+
+  <div class="footer">
+    Dimed HIS/RIS — Guía de Instalación en Windows 11 — Febrero 2026
+  </div>
+
+</div><!-- .page -->
+</body>
+</html>

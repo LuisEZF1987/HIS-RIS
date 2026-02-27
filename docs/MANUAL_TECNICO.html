@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual Técnico — Dimed HIS/RIS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 32px 16px;
+      line-height: 1.6;
+    }
+    .page {
+      max-width: 940px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      padding: 32px 40px;
+    }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
+    .header .subtitle { margin-top: 6px; opacity: .82; font-size: 13px; }
+    .badge {
+      display: inline-block;
+      margin-top: 14px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .body { padding: 36px 40px; }
+
+    /* TOC */
+    .toc {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px 28px;
+      margin-bottom: 32px;
+      columns: 2;
+      column-gap: 32px;
+    }
+    .toc h2 { font-size: 15px; color: #334155; margin-bottom: 10px; column-span: all; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin: 4px 0; break-inside: avoid; }
+    .toc a { color: #2563eb; text-decoration: none; font-size: 13px; }
+    .toc a:hover { text-decoration: underline; }
+
+    h2 {
+      font-size: 18px;
+      color: #1e3a5f;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 6px;
+      margin: 36px 0 16px;
+    }
+    h3 { font-size: 15px; color: #334155; margin: 20px 0 10px; }
+    h4 { font-size: 14px; color: #475569; margin: 14px 0 8px; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 24px; }
+    li { margin: 4px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    th {
+      background: #1e3a5f;
+      color: #fff;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 12px;
+    }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr:hover td { background: #eff6ff; }
+
+    .note {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    .note strong { color: #1e40af; }
+    .warning { background: #fef3c7; border-left-color: #d97706; }
+    .warning strong { color: #92400e; }
+    .danger { background: #fee2e2; border-left-color: #dc2626; }
+    .danger strong { color: #991b1b; }
+
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      color: #be185d;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-size: 12px;
+      margin: 10px 0;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      line-height: 1.5;
+    }
+    pre .comment { color: #64748b; }
+    pre .highlight { color: #38bdf8; }
+
+    .diagram {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 16px;
+      text-align: left;
+      margin: 16px 0;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+      font-size: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; font-size: 11px; }
+      .page { box-shadow: none; }
+      h2 { break-after: avoid; }
+      pre { font-size: 10px; }
+      .toc { break-after: always; columns: 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>Manual Técnico — Dimed HIS/RIS</h1>
+    <div class="subtitle">FastAPI &middot; React &middot; PostgreSQL &middot; Docker &middot; Orthanc</div>
+    <span class="badge">Versión 1.0.0 — Febrero 2026</span>
+  </div>
+
+  <div class="body">
+
+    <!-- TOC -->
+    <div class="toc">
+      <h2>Tabla de Contenidos</h2>
+      <ol>
+        <li><a href="#s1">Arquitectura General</a></li>
+        <li><a href="#s2">Requisitos del Sistema</a></li>
+        <li><a href="#s3">Instalación desde Cero</a></li>
+        <li><a href="#s4">Ejecución del Sistema</a></li>
+        <li><a href="#s5">Configuración (.env)</a></li>
+        <li><a href="#s6">Estructura de Directorios</a></li>
+        <li><a href="#s7">Base de Datos</a></li>
+        <li><a href="#s8">Servicios y Puertos</a></li>
+        <li><a href="#s9">Variables de Entorno</a></li>
+        <li><a href="#s10">API REST — Referencia</a></li>
+        <li><a href="#s11">Integración DICOM / Orthanc</a></li>
+        <li><a href="#s12">HL7 v2.x — MLLP Listener</a></li>
+        <li><a href="#s13">FHIR R4</a></li>
+        <li><a href="#s14">Seguridad</a></li>
+        <li><a href="#s15">Backup y Restauración</a></li>
+        <li><a href="#s16">Monitoreo y Logs</a></li>
+        <li><a href="#s17">Migración desde AS/400 (IBM)</a></li>
+        <li><a href="#s18">Troubleshooting</a></li>
+        <li><a href="#s19">Comandos Make de Referencia</a></li>
+      </ol>
+    </div>
+
+    <!-- ══════ 1. Arquitectura ══════ -->
+    <h2 id="s1">1. Arquitectura General</h2>
+    <div class="diagram">┌─────────────────────────────────────────────────────────────┐
+│                        NGINX :8080                          │
+│              Reverse Proxy + Rate Limiting                  │
+└──────────┬──────────────────────────────┬───────────────────┘
+           │ /api/  /fhir/                │ /
+           ▼                              ▼
+┌──────────────────────┐      ┌───────────────────────┐
+│  FastAPI API :8000   │      │  React Frontend :80   │
+│  - REST API v1       │      │  - Vite + TypeScript  │
+│  - FHIR R4           │      │  - TailwindCSS        │
+│  - HL7 MLLP :2575    │      │  - React Query        │
+└──────────┬───────────┘      └───────────────────────┘
+           │
+     ┌─────┴──────┬──────────────┐
+     ▼            ▼              ▼
+┌─────────┐ ┌─────────┐  ┌────────────┐
+│Postgres │ │  Redis  │  │  Orthanc   │
+│  :5432  │ │  :6379  │  │ :8043/:4243│
+│  (DB)   │ │ (cache/ │  │  (PACS)    │
+└─────────┘ │  queue) │  └────────────┘
+            └────┬────┘
+    ┌────────────┴──────────────┐
+    ▼                           ▼
+┌──────────────┐      ┌──────────────────┐
+│Celery Worker │      │  Celery Beat     │
+│ (async tasks)│      │  (scheduled jobs)│
+└──────────────┘      └──────────────────┘</div>
+
+    <!-- ══════ 2. Requisitos ══════ -->
+    <h2 id="s2">2. Requisitos del Sistema</h2>
+    <h3>Hardware mínimo (producción)</h3>
+    <table>
+      <tr><th>Componente</th><th>Mínimo</th><th>Recomendado</th></tr>
+      <tr><td>CPU</td><td>4 cores</td><td>8 cores</td></tr>
+      <tr><td>RAM</td><td>8 GB</td><td>16 GB</td></tr>
+      <tr><td>Disco</td><td>100 GB SSD</td><td>500 GB SSD</td></tr>
+      <tr><td>Red</td><td>100 Mbps</td><td>1 Gbps</td></tr>
+    </table>
+    <h3>Software</h3>
+    <table>
+      <tr><th>Software</th><th>Versión mínima</th><th>Notas</th></tr>
+      <tr><td>Docker Engine</td><td>24.x</td><td><code>docker --version</code></td></tr>
+      <tr><td>Docker Compose</td><td>2.x</td><td>Incluido en Docker Desktop</td></tr>
+      <tr><td>Git</td><td>cualquiera</td><td>Para clonar el repo</td></tr>
+      <tr><td>OpenSSL</td><td>1.1+</td><td>Para generar claves JWT</td></tr>
+    </table>
+    <h3>Sistema Operativo soportado</h3>
+    <ul>
+      <li>Linux (Ubuntu 22.04+ / Debian 12+) — <strong>recomendado para producción</strong></li>
+      <li>Windows 11 con WSL2 o Docker Desktop</li>
+      <li>macOS 13+</li>
+    </ul>
+
+    <!-- ══════ 3. Instalación ══════ -->
+    <h2 id="s3">3. Instalación desde Cero</h2>
+    <h3>Paso 1 — Clonar el repositorio</h3>
+    <pre>git clone https://github.com/LuisEZF1987/HIS-RIS.git
+cd HIS-RIS</pre>
+
+    <h3>Paso 2 — Crear archivo de configuración</h3>
+    <pre>cp .env.example .env
+<span class="comment"># Editar .env con los valores de producción</span></pre>
+
+    <h3>Paso 3 — Generar claves JWT (RS256)</h3>
+    <pre>mkdir -p infrastructure/keys
+openssl genrsa -out infrastructure/keys/private_key.pem 2048
+openssl rsa -in infrastructure/keys/private_key.pem \
+        -pubout -out infrastructure/keys/public_key.pem
+chmod 600 infrastructure/keys/private_key.pem
+
+<span class="comment"># O usando el script incluido:</span>
+bash infrastructure/scripts/generate-keys.sh</pre>
+
+    <h3>Paso 4 — Construir imágenes Docker</h3>
+    <pre>docker compose build</pre>
+
+    <h3>Paso 5 — Iniciar todos los servicios</h3>
+    <pre>docker compose -f docker-compose.yml up -d</pre>
+
+    <h3>Paso 6 — Ejecutar migraciones de base de datos</h3>
+    <pre>docker compose -f docker-compose.yml exec api alembic upgrade head</pre>
+
+    <h3>Paso 7 — Cargar datos iniciales</h3>
+    <pre>docker compose -f docker-compose.yml exec api python -m app.db.seed</pre>
+
+    <h3>Paso 8 — Verificar</h3>
+    <pre><span class="comment"># Test de salud</span>
+curl http://localhost:8000/health
+
+<span class="comment"># Test e2e completo</span>
+docker compose -f docker-compose.yml exec api python test_e2e.py</pre>
+
+    <!-- ══════ 4. Ejecución ══════ -->
+    <h2 id="s4">4. Ejecución del Sistema</h2>
+    <h3>Modo Producción (recomendado)</h3>
+    <pre>docker compose -f docker-compose.yml up -d</pre>
+    <h3>Detener todos los servicios</h3>
+    <pre>docker compose down</pre>
+    <h3>Reiniciar un servicio específico</h3>
+    <pre>docker compose -f docker-compose.yml restart api
+docker compose -f docker-compose.yml restart nginx  <span class="comment"># SIEMPRE después de recrear api</span></pre>
+    <div class="warning note">
+      <strong>Regla crítica:</strong> Después de recrear el contenedor API, SIEMPRE reiniciar Nginx. Nginx cachea la IP del contenedor y si cambia, da error 502.
+    </div>
+    <h3>Ver estado de los servicios</h3>
+    <pre>docker compose -f docker-compose.yml ps</pre>
+    <p>Salida esperada (todos healthy):</p>
+    <pre>NAME                   STATUS          PORTS
+his_ris_nginx          Up (healthy)    0.0.0.0:8080-&gt;80/tcp
+his_ris_api            Up (healthy)    0.0.0.0:8000-&gt;8000/tcp, 0.0.0.0:2575-&gt;2575/tcp
+his_ris_frontend       Up
+his_ris_postgres       Up (healthy)    0.0.0.0:5432-&gt;5432/tcp
+his_ris_redis          Up (healthy)    0.0.0.0:6379-&gt;6379/tcp
+his_ris_orthanc        Up (healthy)    0.0.0.0:8043-&gt;8042/tcp, 0.0.0.0:4243-&gt;4242/tcp</pre>
+
+    <!-- ══════ 5. Configuración ══════ -->
+    <h2 id="s5">5. Configuración (.env)</h2>
+    <pre><span class="comment"># ── Base de Datos ──</span>
+POSTGRES_DB=his_ris
+POSTGRES_USER=his_ris_user
+POSTGRES_PASSWORD=CAMBIE_ESTO_EN_PRODUCCION
+DATABASE_URL=postgresql+asyncpg://his_ris_user:CAMBIE_ESTO_EN_PRODUCCION@postgres:5432/his_ris
+
+<span class="comment"># ── Redis / Celery ──</span>
+REDIS_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/1
+
+<span class="comment"># ── JWT ──</span>
+JWT_ALGORITHM=RS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+<span class="comment"># ── Orthanc PACS ──</span>
+ORTHANC_URL=http://orthanc:8042
+ORTHANC_USERNAME=orthanc
+ORTHANC_PASSWORD=CAMBIE_CLAVE_ORTHANC
+
+<span class="comment"># ── Hospital ──</span>
+INSTITUTION_NAME=Hospital General San José
+ENVIRONMENT=production
+ALLOWED_ORIGINS=http://mi-servidor.local:8080</pre>
+
+    <!-- ══════ 6. Estructura ══════ -->
+    <h2 id="s6">6. Estructura de Directorios</h2>
+    <div class="diagram">HIS-RIS/
+├── .env / .env.example
+├── docker-compose.yml          # Producción
+├── docker-compose.override.yml # Desarrollo (hot-reload)
+├── Makefile
+│
+├── backend/
+│   ├── app/
+│   │   ├── main.py             # FastAPI app factory + lifespan
+│   │   ├── config.py           # Settings (Pydantic BaseSettings)
+│   │   ├── dependencies.py     # Inyección de dependencias
+│   │   ├── core/               # Seguridad, middleware, DICOM, HL7
+│   │   ├── db/                 # Session, Base, Seed
+│   │   ├── models/             # SQLAlchemy ORM
+│   │   ├── schemas/            # Pydantic v2
+│   │   ├── routers/            # Endpoints por módulo
+│   │   ├── services/           # Lógica de negocio
+│   │   └── workers/            # Tareas Celery
+│   ├── alembic/versions/       # Migraciones de BD
+│   └── requirements.txt
+│
+├── frontend/
+│   └── src/
+│       ├── api/                # Axios + React Query hooks
+│       ├── pages/              # Componentes por módulo
+│       ├── types/index.ts      # Interfaces TypeScript
+│       └── store/              # Zustand (auth state)
+│
+└── infrastructure/
+    ├── nginx/nginx.conf        # Reverse proxy
+    ├── orthanc/orthanc.json    # Config Orthanc PACS
+    ├── keys/                   # Claves JWT RS256
+    └── scripts/                # Utilidades</div>
+
+    <!-- ══════ 7. Base de Datos ══════ -->
+    <h2 id="s7">7. Base de Datos</h2>
+    <p><strong>Motor:</strong> PostgreSQL 15 con extensiones <code>uuid-ossp</code> y <code>pg_trgm</code>.</p>
+    <h3>Esquema principal</h3>
+    <table>
+      <tr><th>Tabla</th><th>Descripción</th></tr>
+      <tr><td><code>users</code></td><td>Usuarios del sistema (roles, bcrypt hash)</td></tr>
+      <tr><td><code>patients</code></td><td>Registro maestro de pacientes (MRN único)</td></tr>
+      <tr><td><code>patient_contacts</code></td><td>Teléfonos, emails, direcciones</td></tr>
+      <tr><td><code>encounters</code></td><td>Admisiones, encuentros ADT</td></tr>
+      <tr><td><code>imaging_orders</code></td><td>Órdenes de imagen (accession_number único)</td></tr>
+      <tr><td><code>dicom_worklist_entries</code></td><td>Entradas MWL para equipos DICOM</td></tr>
+      <tr><td><code>imaging_studies</code></td><td>Estudios DICOM recibidos desde Orthanc</td></tr>
+      <tr><td><code>radiology_reports</code></td><td>Informes radiológicos + firma digital</td></tr>
+      <tr><td><code>report_versions</code></td><td>Historial de versiones de informes</td></tr>
+      <tr><td><code>appointments</code></td><td>Citas de la agenda</td></tr>
+      <tr><td><code>resources</code></td><td>Salas y equipos (con AE Title DICOM)</td></tr>
+      <tr><td><code>hl7_messages</code></td><td>Log de mensajes HL7 enviados/recibidos</td></tr>
+      <tr><td><code>audit_logs</code></td><td>Auditoría de acciones POST/PUT/DELETE</td></tr>
+    </table>
+    <h3>Comandos útiles</h3>
+    <pre><span class="comment"># Abrir consola psql</span>
+docker compose exec postgres psql -U his_ris_user -d his_ris
+
+<span class="comment"># Aplicar migraciones</span>
+docker compose -f docker-compose.yml exec api alembic upgrade head
+
+<span class="comment"># Backup completo</span>
+docker compose exec postgres pg_dump -U his_ris_user his_ris &gt; backup_$(date +%Y%m%d).sql
+
+<span class="comment"># Restaurar</span>
+docker compose exec -T postgres psql -U his_ris_user his_ris &lt; backup_20260224.sql</pre>
+
+    <!-- ══════ 8. Servicios y Puertos ══════ -->
+    <h2 id="s8">8. Servicios y Puertos</h2>
+    <table>
+      <tr><th>Servicio</th><th>Container</th><th>Puerto Host</th><th>Puerto Interno</th><th>Descripción</th></tr>
+      <tr><td>Nginx</td><td>his_ris_nginx</td><td><strong>8080</strong></td><td>80</td><td>Punto de entrada principal</td></tr>
+      <tr><td>API FastAPI</td><td>his_ris_api</td><td>8000</td><td>8000</td><td>REST API + FHIR R4</td></tr>
+      <tr><td>HL7 MLLP</td><td>his_ris_api</td><td><strong>2575</strong></td><td>2575</td><td>Listener TCP HL7 v2</td></tr>
+      <tr><td>Frontend</td><td>his_ris_frontend</td><td>(interno)</td><td>80</td><td>Servido por nginx</td></tr>
+      <tr><td>PostgreSQL</td><td>his_ris_postgres</td><td>5432</td><td>5432</td><td>Base de datos</td></tr>
+      <tr><td>Redis</td><td>his_ris_redis</td><td>6379</td><td>6379</td><td>Cola Celery + caché</td></tr>
+      <tr><td>Orthanc HTTP</td><td>his_ris_orthanc</td><td>8043</td><td>8042</td><td>REST API PACS</td></tr>
+      <tr><td>Orthanc DICOM</td><td>his_ris_orthanc</td><td>4243</td><td>4242</td><td>SCP C-STORE / C-FIND</td></tr>
+      <tr><td>Celery Worker</td><td>his_ris_celery</td><td>—</td><td>—</td><td>Tareas asíncronas</td></tr>
+      <tr><td>Celery Beat</td><td>his_ris_celery_beat</td><td>—</td><td>—</td><td>Tareas programadas</td></tr>
+    </table>
+
+    <!-- ══════ 9. Variables de Entorno ══════ -->
+    <h2 id="s9">9. Variables de Entorno</h2>
+    <table>
+      <tr><th>Variable</th><th>Defecto</th><th>Descripción</th></tr>
+      <tr><td><code>DATABASE_URL</code></td><td>postgresql+asyncpg://...</td><td>URL completa de PostgreSQL</td></tr>
+      <tr><td><code>REDIS_URL</code></td><td>redis://redis:6379/0</td><td>URL de Redis</td></tr>
+      <tr><td><code>JWT_ALGORITHM</code></td><td>RS256</td><td>RS256 (producción) o HS256 (dev)</td></tr>
+      <tr><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td><td>30</td><td>Expiración token de acceso</td></tr>
+      <tr><td><code>REFRESH_TOKEN_EXPIRE_DAYS</code></td><td>7</td><td>Expiración token de refresco</td></tr>
+      <tr><td><code>ORTHANC_URL</code></td><td>http://orthanc:8042</td><td>URL interna de Orthanc</td></tr>
+      <tr><td><code>ORTHANC_USERNAME</code></td><td>orthanc</td><td>Usuario Orthanc</td></tr>
+      <tr><td><code>ORTHANC_PASSWORD</code></td><td>orthanc</td><td>Contraseña Orthanc</td></tr>
+      <tr><td><code>INSTITUTION_NAME</code></td><td>Hospital General</td><td>Nombre del hospital</td></tr>
+      <tr><td><code>ENVIRONMENT</code></td><td>development</td><td><code>development</code> o <code>production</code></td></tr>
+      <tr><td><code>ALLOWED_ORIGINS</code></td><td>http://localhost:3000</td><td>CORS — orígenes permitidos</td></tr>
+      <tr><td><code>HL7_SENDING_FACILITY</code></td><td>HIS_RIS</td><td>Identificador HL7 del sistema</td></tr>
+    </table>
+
+    <!-- ══════ 10. API REST ══════ -->
+    <h2 id="s10">10. API REST — Referencia</h2>
+    <p>Base URL: <code>http://servidor:8000/api/v1</code></p>
+
+    <h3>Autenticación</h3>
+    <pre>POST /auth/login          Obtener access + refresh token
+POST /auth/refresh        Renovar access token
+POST /auth/logout         Invalidar sesión</pre>
+
+    <h3>Pacientes (ADT)</h3>
+    <pre>GET    /patients           Listar (búsqueda, paginación)
+POST   /patients           Crear paciente
+GET    /patients/{id}      Ficha completa
+PUT    /patients/{id}      Actualizar
+POST   /encounters         Crear encuentro/admisión</pre>
+
+    <h3>Órdenes e Imágenes (RIS)</h3>
+    <pre>GET    /orders             Listar (filtros: status, modality, patient_id)
+POST   /orders             Crear orden → genera MWL + HL7 ORM^O01
+GET    /orders/{id}        Detalle
+PUT    /orders/{id}/status Actualizar estado
+GET    /worklist           DICOM Worklist activa
+GET    /studies            Estudios con info paciente/informe</pre>
+
+    <h3>Informes</h3>
+    <pre>GET    /reports            Listar informes con info enriquecida
+POST   /reports            Crear borrador
+GET    /reports/{id}       Obtener informe
+PUT    /reports/{id}       Actualizar borrador
+POST   /reports/{id}/sign  Firmar digitalmente → HL7 ORU^R01
+GET    /reports/{id}/pdf   Descargar PDF</pre>
+
+    <h3>Agenda</h3>
+    <pre>GET    /appointments       Listar citas
+POST   /appointments       Crear cita
+PUT    /appointments/{id}  Modificar / cancelar
+GET    /resources          Lista de salas y equipos
+GET    /slots              Disponibilidad por recurso y fecha</pre>
+
+    <h3>FHIR R4 (base: <code>/fhir/r4</code>)</h3>
+    <pre>GET    /Patient/{id}            Paciente FHIR
+GET    /Patient                 Búsqueda (Bundle)
+GET    /ServiceRequest/{id}     Orden FHIR
+GET    /ImagingStudy/{id}       Estudio FHIR
+GET    /DiagnosticReport/{id}   Informe FHIR</pre>
+
+    <h3>Administración</h3>
+    <pre>GET    /admin/users             Listar usuarios
+POST   /admin/users             Crear usuario
+PUT    /admin/users/{id}        Editar usuario
+DELETE /admin/users/{id}        Desactivar usuario
+GET    /admin/audit-logs        Ver log de auditoría
+GET    /hl7/messages            Log de mensajes HL7</pre>
+
+    <!-- ══════ 11. DICOM / Orthanc ══════ -->
+    <h2 id="s11">11. Integración DICOM / Orthanc</h2>
+    <p>Archivo de configuración: <code>infrastructure/orthanc/orthanc.json</code></p>
+    <p>Orthanc actúa como:</p>
+    <ul>
+      <li><strong>SCP DICOM</strong> (puerto 4243): recibe imágenes de los equipos.</li>
+      <li><strong>Servidor de Worklist</strong>: entrega las listas DICOM MWL a los equipos.</li>
+      <li><strong>Webhook</strong>: notifica al API cuando llega un estudio nuevo.</li>
+    </ul>
+    <h3>Flujo Worklist (IHE Scheduled Workflow)</h3>
+    <div class="diagram">1. Médico crea orden (POST /orders)
+   → Se genera archivo .wl en /var/lib/orthanc/worklists/
+
+2. Equipo (CT/MR/CR) hace DICOM C-FIND a Orthanc puerto 4243
+   → Recibe los datos del paciente y el procedimiento
+
+3. Técnico selecciona el estudio en el equipo → adquiere imágenes
+   → El equipo hace DICOM C-STORE a Orthanc puerto 4243
+
+4. Orthanc llama al webhook: POST /api/v1/orthanc/webhook
+   → El API vincula el estudio a la orden en BD
+   → La orden pasa a COMPLETED
+   → El .wl entry se marca como inactivo</div>
+
+    <h3>Configurar un equipo DICOM</h3>
+    <table>
+      <tr><th>Parámetro</th><th>Valor</th></tr>
+      <tr><td>AE Title destino</td><td><code>ORTHANC</code></td></tr>
+      <tr><td>Host / IP</td><td>IP del servidor</td></tr>
+      <tr><td>Puerto C-STORE</td><td><code>4243</code></td></tr>
+      <tr><td>Puerto C-FIND (worklist)</td><td><code>4243</code></td></tr>
+    </table>
+
+    <!-- ══════ 12. HL7 ══════ -->
+    <h2 id="s12">12. HL7 v2.x — MLLP Listener</h2>
+    <p><strong>Puerto:</strong> 2575 (TCP)</p>
+    <p>El sistema escucha mensajes HL7 entrantes usando el protocolo MLLP (Minimal Lower Layer Protocol).</p>
+    <h3>Mensajes soportados</h3>
+    <table>
+      <tr><th>Mensaje</th><th>Dirección</th><th>Trigger</th></tr>
+      <tr><td><code>ADT^A01</code></td><td>Outbound</td><td>Al registrar un paciente</td></tr>
+      <tr><td><code>ADT^A03</code></td><td>Outbound</td><td>Al dar de alta un paciente</td></tr>
+      <tr><td><code>ORM^O01</code></td><td>Outbound</td><td>Al crear una orden de imagen</td></tr>
+      <tr><td><code>ORU^R01</code></td><td>Outbound</td><td>Al firmar un informe radiológico</td></tr>
+      <tr><td><code>ADT^*</code></td><td>Inbound</td><td>Admisiones desde HIS externo</td></tr>
+    </table>
+
+    <h3>Ejemplo: enviar un mensaje HL7 al sistema</h3>
+    <pre>import socket
+
+MLLP_START = b"\x0b"
+MLLP_END   = b"\x1c\x0d"
+
+msg = (
+    "MSH|^~\\&amp;|HIS_EXTERNO||HIS_RIS||20260224||ADT^A01|MSG001|P|2.5\r"
+    "EVN|A01|20260224\r"
+    "PID|1||PAT001|||GARCIA^JUAN\r"
+)
+frame = MLLP_START + msg.encode("latin-1") + MLLP_END
+
+with socket.create_connection(("servidor", 2575)) as s:
+    s.sendall(frame)
+    ack = s.recv(1024)
+    print("ACK:", ack.decode("latin-1"))</pre>
+
+    <!-- ══════ 13. FHIR R4 ══════ -->
+    <h2 id="s13">13. FHIR R4</h2>
+    <p>El sistema expone recursos FHIR R4 de solo lectura.</p>
+    <table>
+      <tr><th>Campo</th><th>Valor</th></tr>
+      <tr><td>Base URL</td><td><code>http://servidor:8000/fhir/r4</code></td></tr>
+      <tr><td>Autenticación</td><td>Bearer token JWT (mismo que API REST)</td></tr>
+      <tr><td>Recursos</td><td><code>Patient</code>, <code>ServiceRequest</code>, <code>ImagingStudy</code>, <code>DiagnosticReport</code></td></tr>
+    </table>
+
+    <!-- ══════ 14. Seguridad ══════ -->
+    <h2 id="s14">14. Seguridad</h2>
+    <h3>JWT (JSON Web Tokens)</h3>
+    <ul>
+      <li><strong>Algoritmo producción</strong>: RS256 (par de claves RSA 2048 bits)</li>
+      <li><strong>Algoritmo desarrollo</strong>: HS256 (fallback si no hay claves)</li>
+      <li>Token de acceso: 30 minutos</li>
+      <li>Token de refresco: 7 días (rotación automática)</li>
+    </ul>
+    <h3>Contraseñas</h3>
+    <ul>
+      <li>Hash con <strong>bcrypt</strong> (factor de coste 12)</li>
+      <li>Mínimo 8 caracteres</li>
+    </ul>
+    <h3>Rate Limiting (nginx)</h3>
+    <ul>
+      <li>Endpoints generales: 100 req/min por IP</li>
+      <li><code>/auth/login</code>: 10 req/min por IP (protección brute force)</li>
+    </ul>
+    <h3>Headers de Seguridad</h3>
+    <ul>
+      <li><code>X-Content-Type-Options: nosniff</code></li>
+      <li><code>X-Frame-Options: DENY</code></li>
+      <li><code>X-XSS-Protection: 1; mode=block</code></li>
+      <li><code>Referrer-Policy: strict-origin-when-cross-origin</code></li>
+    </ul>
+    <h3>HTTPS (producción)</h3>
+    <pre><span class="comment"># En infrastructure/nginx/nginx.conf:</span>
+server {
+    listen 443 ssl;
+    ssl_certificate     /etc/nginx/certs/cert.pem;
+    ssl_certificate_key /etc/nginx/certs/key.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+}
+server {
+    listen 80;
+    return 301 https://$host$request_uri;
+}</pre>
+    <pre><span class="comment"># Montar volumen de certificados en docker-compose.yml:</span>
+nginx:
+  volumes:
+    - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./infrastructure/certs:/etc/nginx/certs:ro</pre>
+
+    <!-- ══════ 15. Backup ══════ -->
+    <h2 id="s15">15. Backup y Restauración</h2>
+    <h3>Script de backup completo</h3>
+    <pre><span class="comment">#!/bin/bash</span>
+<span class="comment"># backup.sh — ejecutar diariamente con cron</span>
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/backups/his_ris"
+mkdir -p "$BACKUP_DIR"
+
+<span class="comment"># PostgreSQL</span>
+docker compose exec -T postgres pg_dump \
+  -U his_ris_user his_ris | gzip &gt; "$BACKUP_DIR/db_$DATE.sql.gz"
+
+<span class="comment"># Volumen Orthanc (imágenes DICOM)</span>
+docker run --rm \
+  -v his_ris_orthanc_data:/data \
+  -v "$BACKUP_DIR":/backup \
+  alpine tar czf "/backup/orthanc_$DATE.tar.gz" /data
+
+echo "Backup completado: $BACKUP_DIR"</pre>
+
+    <p>Agregar a cron:</p>
+    <pre>0 2 * * * /opt/his_ris/backup.sh &gt;&gt; /var/log/his_ris_backup.log 2&gt;&amp;1</pre>
+
+    <h3>Restaurar PostgreSQL</h3>
+    <pre><span class="comment"># Detener API para evitar escrituras</span>
+docker compose stop api celery-worker celery-beat
+
+<span class="comment"># Restaurar</span>
+gunzip -c backup_20260224_020000.sql.gz | \
+  docker compose exec -T postgres psql -U his_ris_user his_ris
+
+<span class="comment"># Reiniciar</span>
+docker compose start api celery-worker celery-beat</pre>
+
+    <!-- ══════ 16. Monitoreo ══════ -->
+    <h2 id="s16">16. Monitoreo y Logs</h2>
+    <h3>Ver logs en tiempo real</h3>
+    <pre><span class="comment"># Todos los servicios</span>
+docker compose logs -f
+
+<span class="comment"># Solo API</span>
+docker compose logs -f api
+
+<span class="comment"># Solo errores</span>
+docker compose logs api 2&gt;&amp;1 | grep ERROR</pre>
+
+    <h3>Health Check Manual</h3>
+    <pre><span class="comment"># API</span>
+curl http://localhost:8000/health
+
+<span class="comment"># Orthanc</span>
+curl -u orthanc:orthanc http://localhost:8043/system
+
+<span class="comment"># PostgreSQL</span>
+docker compose exec postgres pg_isready -U his_ris_user
+
+<span class="comment"># Redis</span>
+docker compose exec redis redis-cli ping</pre>
+
+    <!-- ══════ 17. Migración AS/400 ══════ -->
+    <h2 id="s17">17. Migración de Datos desde AS/400 (IBM)</h2>
+    <p><strong>Sí, es completamente viable.</strong> AS/400 (iSeries / IBM i) usa DB2, y los datos pueden exportarse e importarse al sistema HIS/RIS.</p>
+    <h3>Método 1 — Exportación CSV (recomendado)</h3>
+    <pre><span class="comment">-- En el AS/400:</span>
+CPYTOIMPF FROMFILE(LIBHOSPITAL/PACIENTES)
+          TOSTMF('/home/export/pacientes.csv')
+          MBROPT(*REPLACE) STMFCODPAG(*UTF8)
+          RCDDLM(*CRLF) STRDLM(*NONE) FLDDLM(';')</pre>
+    <p>Luego ejecutar el script ETL en Python para importar vía API REST.</p>
+
+    <h3>Método 2 — JDBC/ODBC directo</h3>
+    <p>Usar el driver JDBC de IBM (JTOpen) con Python <code>jaydebeapi</code>.</p>
+
+    <h3>Método 3 — HL7 ADT (integración en tiempo real)</h3>
+    <p>Configurar el AS/400 para enviar <code>ADT^A28</code> o <code>ADT^A31</code> al puerto <strong>2575</strong> del servidor HIS/RIS.</p>
+
+    <h3>Tablas a migrar</h3>
+    <table>
+      <tr><th>Prioridad</th><th>Tabla AS/400 → HIS/RIS</th><th>Notas</th></tr>
+      <tr><td>1</td><td>Pacientes → <code>patients</code></td><td>MRN debe coincidir</td></tr>
+      <tr><td>2</td><td>Órdenes históricas → <code>imaging_orders</code></td><td>Solo si se necesita historial</td></tr>
+      <tr><td>3</td><td>Encuentros → <code>encounters</code></td><td>Admisiones activas</td></tr>
+      <tr><td>4</td><td>Estudios previos → <code>imaging_studies</code></td><td>Solo si se migran imágenes DICOM</td></tr>
+    </table>
+    <div class="note">
+      <strong>Recomendación:</strong> Migrar primero en entorno de pruebas. Validar conteos (COUNT) en ambas bases antes de go-live. Operar en paralelo 2-4 semanas.
+    </div>
+
+    <!-- ══════ 18. Troubleshooting ══════ -->
+    <h2 id="s18">18. Troubleshooting</h2>
+
+    <h3>El API no arranca (error de DB)</h3>
+    <pre>docker compose logs api | grep ERROR
+<span class="comment"># Verificar que postgres está healthy:</span>
+docker compose ps postgres</pre>
+
+    <h3>Error "mapper failed to initialize"</h3>
+    <p><strong>Causa:</strong> Un script Python no importó todos los modelos antes de usarlos.</p>
+    <p><strong>Solución:</strong> Agregar <code>import app.db.base</code> al inicio del script.</p>
+
+    <h3>El Worklist no aparece en el equipo DICOM</h3>
+    <ol>
+      <li>Verificar que la entrada existe: <code>GET /api/v1/worklist</code></li>
+      <li>Verificar que Orthanc está healthy: <code>curl -u orthanc:orthanc http://localhost:8043/system</code></li>
+      <li>Verificar que el archivo <code>.wl</code> fue creado:
+        <pre>docker compose exec api ls /var/lib/orthanc/worklists/</pre>
+      </li>
+      <li>Verificar AE Title del equipo en <code>infrastructure/orthanc/orthanc.json</code></li>
+    </ol>
+
+    <h3>Nginx devuelve 502 Bad Gateway</h3>
+    <p><strong>Causa:</strong> El contenedor API fue recreado y Nginx cacheó la IP anterior.</p>
+    <pre>docker compose -f docker-compose.yml restart nginx</pre>
+
+    <h3>Celery no procesa tareas</h3>
+    <pre>docker compose logs celery-worker | grep ERROR
+docker compose exec celery-worker celery -A app.workers.celery_app inspect ping</pre>
+
+    <h3>Restablecer base de datos completamente</h3>
+    <div class="danger note">
+      <strong>DESTRUCTIVO:</strong> Esto elimina todos los datos.
+    </div>
+    <pre>docker compose down -v
+docker compose -f docker-compose.yml up -d
+docker compose -f docker-compose.yml exec api alembic upgrade head
+docker compose -f docker-compose.yml exec api python -m app.db.seed</pre>
+
+    <!-- ══════ 19. Make ══════ -->
+    <h2 id="s19">19. Comandos Make de Referencia</h2>
+    <pre><span class="comment"># Docker</span>
+make up            # Levantar en modo desarrollo
+make up-prod       # Levantar en modo producción
+make down          # Detener todos los servicios
+make build         # Reconstruir imágenes
+make restart       # down + up
+
+<span class="comment"># Logs</span>
+make logs          # Todos los servicios
+make logs-api      # Solo API
+make logs-worker   # Solo Celery worker
+
+<span class="comment"># Base de datos</span>
+make migrate       # Aplicar migraciones pendientes
+make migrate-create MSG="descripcion"
+make migrate-down  # Rollback última migración
+make db-shell      # Consola psql
+
+<span class="comment"># Datos</span>
+make seed          # Datos iniciales (usuarios, recursos)
+make seed-demo     # Datos de demostración
+
+<span class="comment"># Desarrollo</span>
+make test          # Ejecutar tests backend
+make test-cov      # Tests con cobertura HTML
+make lint          # Ruff linter
+make format        # Ruff formatter
+make shell         # Shell en contenedor API
+
+<span class="comment"># Seguridad</span>
+make keys          # Generar claves JWT RS256
+
+<span class="comment"># Limpieza</span>
+make clean         # Eliminar contenedores + volúmenes (DESTRUCTIVO)
+make clean-images  # Eliminar imágenes construidas</pre>
+
+  </div><!-- .body -->
+
+  <div class="footer">
+    Dimed HIS/RIS — Manual Técnico v1.0.0 — Febrero 2026
+  </div>
+
+</div><!-- .page -->
+</body>
+</html>

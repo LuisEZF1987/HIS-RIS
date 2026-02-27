@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual de Usuario — Dimed HIS/RIS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1e293b;
+      background: #f1f5f9;
+      padding: 32px 16px;
+      line-height: 1.6;
+    }
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      padding: 32px 40px;
+    }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
+    .header .subtitle { margin-top: 6px; opacity: .82; font-size: 13px; }
+    .badge {
+      display: inline-block;
+      margin-top: 14px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Body ── */
+    .body { padding: 36px 40px; }
+
+    /* ── TOC ── */
+    .toc {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px 28px;
+      margin-bottom: 32px;
+    }
+    .toc h2 { font-size: 15px; color: #334155; margin-bottom: 10px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin: 5px 0; }
+    .toc a { color: #2563eb; text-decoration: none; font-size: 13px; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ── Sections ── */
+    h2 {
+      font-size: 18px;
+      color: #1e3a5f;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 6px;
+      margin: 36px 0 16px;
+    }
+    h3 {
+      font-size: 15px;
+      color: #334155;
+      margin: 20px 0 10px;
+    }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 8px 24px; }
+    li { margin: 4px 0; }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    th {
+      background: #1e3a5f;
+      color: #fff;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 12px;
+    }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr:hover td { background: #eff6ff; }
+
+    /* ── Notes ── */
+    .note {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    .note strong { color: #1e40af; }
+    .warning {
+      background: #fef3c7;
+      border-left-color: #d97706;
+    }
+    .warning strong { color: #92400e; }
+
+    /* ── Code ── */
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      color: #be185d;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-size: 12px;
+      margin: 10px 0;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+    }
+
+    /* ── Diagram ── */
+    .diagram {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 16px;
+      text-align: center;
+      margin: 16px 0;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+      font-size: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; }
+      h2 { break-after: avoid; }
+      .toc { break-after: always; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══════════ Header ═══════════ -->
+  <div class="header">
+    <h1>Manual de Usuario — Dimed HIS/RIS</h1>
+    <div class="subtitle">Hospital Information System / Radiology Information System</div>
+    <span class="badge">Versión 1.0.0 — Febrero 2026</span>
+  </div>
+
+  <div class="body">
+
+    <!-- ═══════════ TOC ═══════════ -->
+    <div class="toc">
+      <h2>Tabla de Contenidos</h2>
+      <ol>
+        <li><a href="#sec1">Introducción</a></li>
+        <li><a href="#sec2">Acceso al Sistema</a></li>
+        <li><a href="#sec3">Módulo Dashboard</a></li>
+        <li><a href="#sec4">Módulo Pacientes (ADT)</a></li>
+        <li><a href="#sec5">Módulo Órdenes de Imagen (RIS)</a></li>
+        <li><a href="#sec6">Módulo Worklist DICOM</a></li>
+        <li><a href="#sec7">Módulo Informes Radiológicos</a></li>
+        <li><a href="#sec8">Módulo Agenda</a></li>
+        <li><a href="#sec9">Módulo Administración</a></li>
+        <li><a href="#sec10">Roles y Permisos</a></li>
+        <li><a href="#sec11">Preguntas Frecuentes</a></li>
+      </ol>
+    </div>
+
+    <!-- ═══════════ 1. Introducción ═══════════ -->
+    <h2 id="sec1">1. Introducción</h2>
+    <p>El <strong>Dimed HIS/RIS</strong> es una plataforma web integrada que cubre:</p>
+    <ul>
+      <li><strong>HIS</strong> (Hospital Information System): registro de pacientes, encuentros clínicos.</li>
+      <li><strong>RIS</strong> (Radiology Information System): órdenes de imagen, informes radiológicos, firma digital.</li>
+      <li><strong>PACS</strong> (Picture Archiving): integración con Orthanc para almacenamiento y visualización de imágenes DICOM.</li>
+      <li><strong>Estándares</strong>: DICOM Worklist (MWL), HL7 v2.x, FHIR R4.</li>
+    </ul>
+    <table>
+      <tr><th>Recurso</th><th>URL</th></tr>
+      <tr><td>Aplicación web</td><td><code>http://&lt;servidor&gt;:8080</code></td></tr>
+      <tr><td>Documentación API</td><td><code>http://&lt;servidor&gt;:8000/docs</code> (solo desarrollo)</td></tr>
+    </table>
+
+    <!-- ═══════════ 2. Acceso al Sistema ═══════════ -->
+    <h2 id="sec2">2. Acceso al Sistema</h2>
+
+    <h3>2.1 Inicio de Sesión</h3>
+    <ol>
+      <li>Abra el navegador y acceda a la URL del sistema.</li>
+      <li>Ingrese su <strong>usuario</strong> y <strong>contraseña</strong>.</li>
+      <li>Haga clic en <strong>Iniciar Sesión</strong>.</li>
+    </ol>
+    <div class="note">
+      <strong>Sesión:</strong> El token de acceso expira a los 30 minutos de inactividad. El sistema lo renueva automáticamente mientras esté activo.
+    </div>
+
+    <h3>2.2 Usuarios por Defecto (instalación nueva)</h3>
+    <table>
+      <tr><th>Usuario</th><th>Contraseña</th><th>Rol</th></tr>
+      <tr><td>admin</td><td><code>Admin123!</code></td><td>Administrador</td></tr>
+      <tr><td>receptionist</td><td><code>Recep123!</code></td><td>Recepcionista</td></tr>
+      <tr><td>tecnico</td><td><code>Tecnico123!</code></td><td>Técnico</td></tr>
+      <tr><td>radiologo</td><td><code>Radiologo123!</code></td><td>Radiólogo</td></tr>
+      <tr><td>medico</td><td><code>Medico123!</code></td><td>Médico</td></tr>
+    </table>
+    <div class="warning note">
+      <strong>Importante:</strong> Cambie las contraseñas por defecto antes de poner el sistema en producción.
+    </div>
+
+    <h3>2.3 Cierre de Sesión</h3>
+    <p>Haga clic en su nombre de usuario (esquina superior derecha) → <strong>Cerrar Sesión</strong>.</p>
+
+    <!-- ═══════════ 3. Dashboard ═══════════ -->
+    <h2 id="sec3">3. Módulo Dashboard</h2>
+    <p>Pantalla principal tras el inicio de sesión. Muestra:</p>
+    <table>
+      <tr><th>Tarjeta</th><th>Descripción</th></tr>
+      <tr><td><strong>Total Pacientes</strong></td><td>Cantidad de pacientes registrados</td></tr>
+      <tr><td><strong>Órdenes Pendientes</strong></td><td>Órdenes en estado REQUESTED</td></tr>
+      <tr><td><strong>Órdenes Programadas</strong></td><td>Órdenes en estado SCHEDULED</td></tr>
+      <tr><td><strong>Worklist Activo</strong></td><td>Estudios pendientes de adquisición en equipos</td></tr>
+      <tr><td><strong>Sin Informe</strong></td><td>Estudios recibidos sin informe (solo admin y radiólogo)</td></tr>
+    </table>
+    <p><strong>Acciones rápidas</strong> disponibles: Nuevo Paciente, Nueva Orden, Ver Worklist, Ver Agenda.</p>
+
+    <!-- ═══════════ 4. Pacientes ═══════════ -->
+    <h2 id="sec4">4. Módulo Pacientes (ADT)</h2>
+
+    <h3>4.1 Buscar Paciente</h3>
+    <ol>
+      <li>Menú → <strong>Pacientes</strong>.</li>
+      <li>Escriba en el campo de búsqueda: nombre, apellido o MRN.</li>
+      <li>Haga clic en el paciente para ver su ficha.</li>
+    </ol>
+
+    <h3>4.2 Registrar Nuevo Paciente</h3>
+    <ol>
+      <li>Menú → <strong>Pacientes</strong> → botón <strong>+ Nuevo Paciente</strong>.</li>
+      <li>Complete los campos:</li>
+    </ol>
+    <table>
+      <tr><th>Campo</th><th>Obligatorio</th><th>Descripción</th></tr>
+      <tr><td>Nombre(s)</td><td>Sí</td><td>Nombres del paciente</td></tr>
+      <tr><td>Apellido(s)</td><td>Sí</td><td>Apellidos</td></tr>
+      <tr><td>Fecha de Nacimiento</td><td>No</td><td>Formato YYYY-MM-DD</td></tr>
+      <tr><td>Género</td><td>No</td><td>M / F / Otro</td></tr>
+      <tr><td>DNI</td><td>No</td><td>Documento de identidad</td></tr>
+      <tr><td>Grupo Sanguíneo</td><td>No</td><td>A+, A-, B+, etc.</td></tr>
+      <tr><td>Alergias</td><td>No</td><td>Texto libre</td></tr>
+      <tr><td>Teléfono</td><td>No</td><td>Número de contacto</td></tr>
+      <tr><td>Email</td><td>No</td><td>Correo electrónico</td></tr>
+    </table>
+    <ol start="3">
+      <li>Haga clic en <strong>Registrar Paciente</strong>.</li>
+      <li>El sistema asigna automáticamente un <strong>MRN</strong> (Medical Record Number) único.</li>
+    </ol>
+    <div class="note">
+      <strong>Nota:</strong> Al registrar el paciente se genera automáticamente un mensaje <strong>HL7 ADT^A01</strong> hacia sistemas externos.
+    </div>
+
+    <h3>4.3 Ficha del Paciente</h3>
+    <p>Muestra:</p>
+    <ul>
+      <li>Datos personales completos.</li>
+      <li>Lista de órdenes de imagen históricas.</li>
+      <li>Botón <strong>Nueva Orden</strong> para crear una orden directamente desde la ficha.</li>
+    </ul>
+
+    <!-- ═══════════ 5. Órdenes ═══════════ -->
+    <h2 id="sec5">5. Módulo Órdenes de Imagen (RIS)</h2>
+
+    <h3>5.1 Ver Órdenes</h3>
+    <p>Menú → <strong>Órdenes</strong>. Se puede filtrar por:</p>
+    <ul>
+      <li><strong>Estado</strong>: REQUESTED, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED.</li>
+      <li><strong>Modalidad</strong>: CR, CT, MR, US, etc.</li>
+    </ul>
+
+    <h3>5.2 Crear Nueva Orden</h3>
+    <ol>
+      <li>Menú → <strong>Órdenes</strong> → <strong>+ Nueva Orden</strong> (o desde la ficha del paciente).</li>
+      <li>Complete los campos:</li>
+    </ol>
+    <table>
+      <tr><th>Campo</th><th>Obligatorio</th><th>Descripción</th></tr>
+      <tr><td>ID Paciente</td><td>Sí</td><td>Número de ID del paciente</td></tr>
+      <tr><td>Modalidad</td><td>Sí</td><td>CR, CT, MR, US, NM, PT, DX, MG, XA, RF, OT</td></tr>
+      <tr><td>Descripción del Procedimiento</td><td>Sí</td><td>Texto descriptivo</td></tr>
+      <tr><td>Código de Procedimiento</td><td>No</td><td>Código SNOMED/CPT</td></tr>
+      <tr><td>Parte del Cuerpo</td><td>No</td><td>Región anatómica</td></tr>
+      <tr><td>Prioridad</td><td>Sí</td><td>ROUTINE / URGENT / STAT / ASAP</td></tr>
+      <tr><td>Indicación Clínica</td><td>No</td><td>Motivo clínico</td></tr>
+      <tr><td>Fecha Programada</td><td>No</td><td>Fecha y hora de la cita</td></tr>
+    </table>
+    <ol start="3">
+      <li>Haga clic en <strong>Crear Orden</strong>.</li>
+    </ol>
+    <div class="note">
+      <strong>Al crear la orden:</strong>
+      <ul>
+        <li>Se genera automáticamente una <strong>entrada en el Worklist DICOM</strong> (archivo <code>.wl</code> para Orthanc).</li>
+        <li>Se envía un mensaje <strong>HL7 ORM^O01</strong> a sistemas externos.</li>
+      </ul>
+    </div>
+
+    <h3>5.3 Estados de una Orden</h3>
+    <div class="diagram">REQUESTED → SCHEDULED → IN_PROGRESS → COMPLETED
+                                                ↘ CANCELLED</div>
+
+    <!-- ═══════════ 6. Worklist ═══════════ -->
+    <h2 id="sec6">6. Módulo Worklist DICOM</h2>
+    <p>Menú → <strong>Worklist</strong>.</p>
+    <p>Muestra las órdenes programadas disponibles para los equipos de imagen (DICOM C-FIND MWL).</p>
+    <p><strong>Filtro por Modalidad</strong>: permite ver solo los estudios para un equipo específico (CT, MR, CR, etc.).</p>
+    <div class="note">
+      <strong>Flujo automático:</strong> Los equipos de imagen (CT, MRI, etc.) consultan esta lista automáticamente vía DICOM C-FIND. Cuando el técnico selecciona un estudio en el equipo, los datos del paciente se cargan automáticamente (sin riesgo de error de transcripción).
+    </div>
+
+    <!-- ═══════════ 7. Informes ═══════════ -->
+    <h2 id="sec7">7. Módulo Informes Radiológicos</h2>
+
+    <h3>7.1 Tab "Pendientes de Informe"</h3>
+    <p>Lista los estudios recibidos (imágenes ya en Orthanc) que aún no tienen informe.</p>
+    <ul>
+      <li>Muestra: nombre del paciente, MRN, número de acceso, modalidad, cantidad de series.</li>
+      <li>Botón <strong>Crear Informe</strong>: crea un borrador y abre el editor.</li>
+    </ul>
+
+    <h3>7.2 Tab "Mis Informes"</h3>
+    <p>Lista todos los informes existentes (borradores y firmados).</p>
+    <table>
+      <tr><th>Estado</th><th>Descripción</th></tr>
+      <tr><td><strong>Borrador</strong> (draft)</td><td>En edición</td></tr>
+      <tr><td><strong>Preliminar</strong> (preliminary)</td><td>Guardado al menos una vez</td></tr>
+      <tr><td><strong>Firmado</strong> (final)</td><td>Firmado digitalmente, no editable</td></tr>
+    </table>
+
+    <h3>7.3 Editor de Informe</h3>
+    <table>
+      <tr><th>Sección</th><th>Descripción</th></tr>
+      <tr><td><strong>Técnica</strong></td><td>Descripción del protocolo utilizado</td></tr>
+      <tr><td><strong>Hallazgos</strong></td><td>Descripción de lo observado en las imágenes</td></tr>
+      <tr><td><strong>Impresión Diagnóstica</strong></td><td>Conclusión diagnóstica (obligatorio para firmar)</td></tr>
+      <tr><td><strong>Recomendaciones</strong></td><td>Sugerencias de seguimiento</td></tr>
+    </table>
+    <p><strong>Guardar Borrador</strong>: guarda el informe sin firmarlo (puede editarse nuevamente).</p>
+
+    <h3>7.4 Firma Digital</h3>
+    <ol>
+      <li>Haga clic en <strong>Firmar Informe</strong>.</li>
+      <li>Ingrese su <strong>contraseña</strong> para confirmar identidad.</li>
+      <li>El sistema:
+        <ul>
+          <li>Marca el informe como <strong>final</strong> (no editable).</li>
+          <li>Genera un <strong>hash SHA-256</strong> de verificación.</li>
+          <li>Registra fecha/hora de firma y nombre del firmante.</li>
+          <li>Envía automáticamente un mensaje <strong>HL7 ORU^R01</strong> a sistemas externos.</li>
+        </ul>
+      </li>
+    </ol>
+    <div class="warning note">
+      <strong>Importante:</strong> Un informe firmado NO puede modificarse. Si necesita correcciones, contacte al administrador para crear un informe enmendado.
+    </div>
+
+    <h3>7.5 Descarga PDF</h3>
+    <p>Disponible solo para informes firmados (estado <strong>final</strong>). El PDF incluye:</p>
+    <ul>
+      <li>Datos del paciente y número de acceso.</li>
+      <li>Técnica, hallazgos, impresión diagnóstica y recomendaciones.</li>
+      <li>Nombre del firmante, fecha y hash de verificación.</li>
+    </ul>
+
+    <!-- ═══════════ 8. Agenda ═══════════ -->
+    <h2 id="sec8">8. Módulo Agenda</h2>
+
+    <h3>8.1 Vista Calendario</h3>
+    <p>Menú → <strong>Agenda</strong>. Muestra citas en vista mensual, semanal o diaria.</p>
+
+    <h3>8.2 Crear Cita</h3>
+    <ol>
+      <li>Haga clic en <strong>+ Nueva Cita</strong> o en un slot libre del calendario.</li>
+      <li>Complete: paciente, recurso (sala/equipo), fecha y hora, duración.</li>
+    </ol>
+
+    <h3>8.3 Consultar Disponibilidad</h3>
+    <p>Seleccione un recurso y una fecha para ver los slots disponibles.</p>
+    <p><strong>Recursos disponibles</strong>: salas de RX, escáneres CT, equipos MRI, ecógrafos, etc.</p>
+
+    <!-- ═══════════ 9. Administración ═══════════ -->
+    <h2 id="sec9">9. Módulo Administración</h2>
+    <div class="note">
+      <strong>Accesible solo</strong> para el rol <strong>Administrador</strong>.
+    </div>
+
+    <h3>9.1 Gestión de Usuarios</h3>
+    <ul>
+      <li>Crear nuevos usuarios con roles específicos.</li>
+      <li>Ver estado (activo/inactivo) de cada usuario.</li>
+      <li>Desactivar usuarios que ya no deben tener acceso.</li>
+    </ul>
+
+    <h3>9.2 Auditoría del Sistema</h3>
+    <p>Tab <strong>Auditoría</strong> — registra automáticamente:</p>
+    <ul>
+      <li>Todas las acciones de creación/modificación/eliminación.</li>
+      <li>Usuario que realizó la acción.</li>
+      <li>IP de origen, endpoint, código HTTP de respuesta.</li>
+      <li>Fecha y hora exacta.</li>
+    </ul>
+
+    <!-- ═══════════ 10. Roles y Permisos ═══════════ -->
+    <h2 id="sec10">10. Roles y Permisos</h2>
+    <table>
+      <tr>
+        <th>Módulo</th><th>Admin</th><th>Recepcionista</th><th>Técnico</th><th>Radiólogo</th><th>Médico</th>
+      </tr>
+      <tr><td>Pacientes (crear/editar)</td><td>&#10003;</td><td>&#10003;</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Pacientes (ver)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+      <tr><td>Órdenes (crear)</td><td>&#10003;</td><td>—</td><td>—</td><td>—</td><td>&#10003;</td></tr>
+      <tr><td>Órdenes (ver)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+      <tr><td>Worklist</td><td>&#10003;</td><td>—</td><td>&#10003;</td><td>&#10003;</td><td>—</td></tr>
+      <tr><td>Informes (crear/editar)</td><td>&#10003;</td><td>—</td><td>—</td><td>&#10003;</td><td>—</td></tr>
+      <tr><td>Informes (firmar)</td><td>&#10003;</td><td>—</td><td>—</td><td>&#10003;</td><td>—</td></tr>
+      <tr><td>Informes (ver)</td><td>&#10003;</td><td>—</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+      <tr><td>Agenda</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+      <tr><td>FHIR R4</td><td>&#10003;</td><td>—</td><td>—</td><td>&#10003;</td><td>&#10003;</td></tr>
+      <tr><td>HL7 mensajes</td><td>&#10003;</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Administración</td><td>&#10003;</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    </table>
+
+    <!-- ═══════════ 11. Preguntas Frecuentes ═══════════ -->
+    <h2 id="sec11">11. Preguntas Frecuentes</h2>
+
+    <h3>¿Qué hago si olvidé mi contraseña?</h3>
+    <p>Contacte al administrador del sistema para que restablezca su contraseña desde el módulo de Administración.</p>
+
+    <h3>¿Puedo editar un informe ya firmado?</h3>
+    <p>No. Los informes firmados son inmutables por seguridad. Solicite al administrador que gestione un informe enmendado.</p>
+
+    <h3>¿Por qué no veo la opción Worklist?</h3>
+    <p>El Worklist solo está disponible para los roles: Técnico, Radiólogo y Administrador.</p>
+
+    <h3>¿Cuánto tiempo permanece activa mi sesión?</h3>
+    <p>El token de acceso expira en 30 minutos. El sistema lo renueva automáticamente mientras esté usando la aplicación. Si estuvo inactivo más de 30 minutos, deberá volver a iniciar sesión.</p>
+
+    <h3>¿El sistema funciona en dispositivos móviles?</h3>
+    <p>La interfaz es responsive y funciona en tablets. Para uso intensivo (informes, worklist) se recomienda escritorio.</p>
+
+  </div><!-- .body -->
+
+  <div class="footer">
+    Dimed HIS/RIS — Manual de Usuario v1.0.0 — Febrero 2026
+  </div>
+
+</div><!-- .page -->
+</body>
+</html>
