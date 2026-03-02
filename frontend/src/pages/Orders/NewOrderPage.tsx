@@ -60,6 +60,7 @@ export default function NewOrderPage() {
   const patientId = watch('patient_id')
   const watchedResourceId = watch('resource_id')
   const watchedScheduledAt = watch('scheduled_at')
+  const watchedModality = watch('modality')
 
   // Search patients for the dropdown
   const { data: patientResults } = useQuery({
@@ -98,6 +99,7 @@ export default function NewOrderPage() {
     queryFn: () => scheduleApi.getResources(undefined, true),
   })
 
+  const filteredResources = (resources || []).filter(r => !watchedModality || r.modality === watchedModality)
   const selectedResource = resources?.find(r => r.id === Number(watchedResourceId))
 
   const mutation = useMutation({
@@ -222,7 +224,7 @@ export default function NewOrderPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Modalidad *</label>
-              <select {...register('modality')} className={inputClass}>
+              <select {...register('modality', { onChange: () => setValue('resource_id', undefined as any) })} className={inputClass}>
                 <option value="">Seleccionar</option>
                 {['CR', 'CT', 'MR', 'US', 'NM', 'DX', 'MG', 'XA', 'RF', 'OT'].map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -319,7 +321,7 @@ export default function NewOrderPage() {
             <label className={labelClass}>Equipo / Sala (opcional)</label>
             <select {...register('resource_id')} className={inputClass}>
               <option value="">Sin asignar</option>
-              {(resources || []).map((r) => (
+              {filteredResources.map((r) => (
                 <option key={r.id} value={r.id}>{r.name} ({r.modality || r.resource_type})</option>
               ))}
             </select>
@@ -329,9 +331,14 @@ export default function NewOrderPage() {
                 {selectedResource.operating_start_hour === 0 && selectedResource.operating_end_hour === 24 && ' (24 horas)'}
               </div>
             )}
-            {(!resources || resources.length === 0) && (
+            {watchedModality && filteredResources.length === 0 && (
               <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">
-                No hay equipos registrados. Agregue equipos desde Administración.
+                No hay equipos disponibles para modalidad {watchedModality}. Agregue equipos desde Administración.
+              </p>
+            )}
+            {!watchedModality && (
+              <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">
+                Seleccione una modalidad para ver los equipos disponibles.
               </p>
             )}
           </div>

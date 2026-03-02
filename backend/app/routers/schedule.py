@@ -38,7 +38,7 @@ async def list_resources(
     modality: Optional[str] = None,
     available_only: bool = False,
 ):
-    stmt = select(Resource)
+    stmt = select(Resource).order_by(Resource.id)
     if modality:
         stmt = stmt.where(Resource.modality == modality)
     if available_only:
