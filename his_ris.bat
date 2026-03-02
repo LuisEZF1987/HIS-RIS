@@ -41,7 +41,7 @@ echo  ^|    [15] Abrir API Docs (Swagger)                     ^|
 echo  ^|    [16] Abrir Orthanc PACS                           ^|
 echo  ^|                                                      ^|
 echo  ^|  MANTENIMIENTO                                       ^|
-echo  ^|    [17] Limpiar sistema (BORRA TODOS LOS DATOS)      ^|
+echo  ^|    [17] Purgar datos clinicos (conserva config)      ^|
 echo  ^|                                                      ^|
 echo  ^|    [0]  Salir                                        ^|
 echo  +======================================================+
@@ -358,25 +358,45 @@ goto MENU
 cls
 echo.
 echo  +===================================================+
-echo  ^|   ADVERTENCIA - ACCION DESTRUCTIVA               ^|
+echo  ^|   PURGAR DATOS CLINICOS                           ^|
 echo  +---------------------------------------------------+
-echo  ^|   Esto eliminara TODOS los contenedores y        ^|
-echo  ^|   volumenes, incluyendo la base de datos.        ^|
-echo  ^|   Esta accion NO se puede deshacer.              ^|
+echo  ^|   Esto eliminara:                                 ^|
+echo  ^|     - Pacientes y contactos                       ^|
+echo  ^|     - Ordenes de imagen                           ^|
+echo  ^|     - Worklist DICOM (entradas y archivos .wl)    ^|
+echo  ^|     - Estudios e informes radiologicos            ^|
+echo  ^|     - Citas de la agenda                          ^|
+echo  ^|     - Encuentros y mensajes HL7                   ^|
+echo  ^|                                                   ^|
+echo  ^|   Se CONSERVA:                                    ^|
+echo  ^|     - Usuarios y roles                            ^|
+echo  ^|     - Equipos / recursos                          ^|
+echo  ^|     - Logs de auditoria                           ^|
+echo  ^|     - Configuracion del sistema                   ^|
 echo  +===================================================+
 echo.
 set "CONF="
-set /p "CONF=  Escriba CONFIRMAR para continuar: "
-if not "%CONF%"=="CONFIRMAR" (
+set /p "CONF=  Escriba PURGAR para continuar: "
+if not "%CONF%"=="PURGAR" (
     echo  Operacion cancelada.
     timeout /t 2 >nul
     goto MENU
 )
 echo.
-echo  Eliminando contenedores y volumenes...
-docker compose -f docker-compose.yml down -v --remove-orphans
+echo  Purgando datos clinicos...
 echo.
-echo  Sistema limpiado. Use la opcion 9 para reinstalar.
+docker compose -f docker-compose.yml exec -T postgres psql -U his_ris_user -d his_ris -c "BEGIN; DELETE FROM report_versions; DELETE FROM radiology_reports; DELETE FROM imaging_studies; DELETE FROM dicom_worklist_entries; DELETE FROM appointments; DELETE FROM imaging_orders; DELETE FROM hl7_messages; DELETE FROM encounters; DELETE FROM patient_contacts; DELETE FROM patients; COMMIT;"
+echo.
+echo  Limpiando archivos worklist DICOM...
+docker compose -f docker-compose.yml exec api sh -c "rm -f /app/worklist/*.wl 2>/dev/null; echo 'Archivos .wl eliminados'"
+echo.
+echo  Limpiando estudios en Orthanc PACS...
+docker compose -f docker-compose.yml exec api python -c "import urllib.request, base64, json; req=urllib.request.Request('http://orthanc:8042/studies'); req.add_header('Authorization','Basic '+base64.b64encode(b'orthanc:orthanc').decode()); studies=json.loads(urllib.request.urlopen(req).read()); [urllib.request.urlopen(urllib.request.Request('http://orthanc:8042/studies/'+s, method='DELETE', headers={'Authorization':'Basic '+base64.b64encode(b'orthanc:orthanc').decode()})) for s in studies]; print(f'{len(studies)} estudios eliminados de Orthanc')" 2>nul || echo  (Orthanc no disponible o sin estudios)
+echo.
+echo  ===================================================
+echo   Purga completada.
+echo   Usuarios, equipos y configuracion conservados.
+echo  ===================================================
 echo.
 pause
 goto MENU
