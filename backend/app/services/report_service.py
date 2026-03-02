@@ -67,11 +67,12 @@ class ReportService:
         report = result.scalar_one_or_none()
         if not report:
             raise NotFoundError(f"Report {report_id} not found")
-        # Enrich with modality from study/order
+        # Enrich with modality — prefer order modality (user-selected) over study DICOM tag
         if report.study:
-            report.modality = report.study.modality or (
-                report.study.order.modality.value if report.study.order else None
-            )
+            order = report.study.order
+            report.modality = (
+                order.modality.value if order else None
+            ) or report.study.modality
         return report
 
     async def update_report(self, report_id: int, data: ReportUpdate, user: User) -> RadiologyReport:
