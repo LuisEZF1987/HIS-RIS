@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { UserPlus, Users, ShieldCheck, Monitor, Plus } from 'lucide-react'
+import { UserPlus, Users, ShieldCheck, Monitor, Plus, Pencil, ToggleLeft, ToggleRight, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 const schema = z.object({
@@ -61,6 +61,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'users' | 'resources' | 'audit'>('users')
   const [showForm, setShowForm] = useState(false)
   const [showResourceForm, setShowResourceForm] = useState(false)
+  const [editingResource, setEditingResource] = useState<Resource | null>(null)
 
   const { data: users } = useQuery({
     queryKey: ['admin-users'],
@@ -118,6 +119,43 @@ export default function AdminPage() {
     },
     onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al crear recurso'),
   })
+
+  const {
+    register: regEditResource,
+    handleSubmit: submitEditResource,
+    reset: resetEditResource,
+    formState: { errors: editResErrors },
+  } = useForm<ResourceFormData>({
+    resolver: zodResolver(resourceSchema),
+  })
+
+  const openEditModal = (r: Resource) => {
+    setEditingResource(r)
+    resetEditResource({
+      name: r.name,
+      resource_type: r.resource_type as 'room' | 'equipment' | 'staff',
+      modality: r.modality || '',
+      ae_title: r.ae_title || '',
+      location: r.location || '',
+      operating_start_hour: r.operating_start_hour,
+      operating_end_hour: r.operating_end_hour,
+    })
+  }
+
+  const updateResourceMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Resource> }) =>
+      scheduleApi.updateResource(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['resources'] })
+      toast.success('Equipo actualizado')
+      setEditingResource(null)
+    },
+    onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al actualizar'),
+  })
+
+  const toggleAvailability = (r: Resource) => {
+    updateResourceMutation.mutate({ id: r.id, data: { is_available: !r.is_available } })
+  }
 
   const tabBtn = (id: typeof tab, label: string, Icon: any) => (
     <button
@@ -331,7 +369,7 @@ export default function AdminPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-slate-900/50 border-b dark:border-slate-700">
                   <tr>
-                    {['Nombre', 'Tipo', 'Modalidad', 'AE Title', 'Ubicación', 'Horario', 'Estado'].map((h) => (
+                    {['Nombre', 'Tipo', 'Modalidad', 'AE Title', 'Ubicación', 'Horario', 'Estado', 'Acciones'].map((h) => (
                       <th key={h} className="text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-4 py-3">{h}</th>
                     ))}
                   </tr>
@@ -357,6 +395,25 @@ export default function AdminPage() {
                           {r.is_available ? 'Disponible' : 'No disponible'}
                         </span>
                       </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditModal(r)}
+                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-500 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400"
+                            title="Editar"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => toggleAvailability(r)}
+                            disabled={updateResourceMutation.isPending}
+                            className={`p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 ${r.is_available ? 'text-green-600 dark:text-green-400 hover:text-red-600 dark:hover:text-red-400' : 'text-red-500 dark:text-red-400 hover:text-green-600 dark:hover:text-green-400'}`}
+                            title={r.is_available ? 'Deshabilitar' : 'Habilitar'}
+                          >
+                            {r.is_available ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -364,6 +421,87 @@ export default function AdminPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Edit Resource Modal */}
+      {editingResource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-slate-700">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Editar Equipo / Sala</h2>
+              <button onClick={() => setEditingResource(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form
+              onSubmit={submitEditResource((d) =>
+                updateResourceMutation.mutate({
+                  id: editingResource.id,
+                  data: {
+                    ...d,
+                    modality: d.modality || undefined,
+                    ae_title: d.ae_title || undefined,
+                    location: d.location || undefined,
+                  },
+                })
+              )}
+              className="px-6 py-5 space-y-4"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Nombre *</label>
+                  <input {...regEditResource('name')} className={inputClass} />
+                  {editResErrors.name && <p className="text-red-500 text-xs mt-1">{editResErrors.name.message}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>Tipo</label>
+                  <select {...regEditResource('resource_type')} className={inputClass}>
+                    <option value="equipment">Equipo</option>
+                    <option value="room">Sala</option>
+                    <option value="staff">Personal</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Modalidad DICOM</label>
+                  <select {...regEditResource('modality')} className={inputClass}>
+                    <option value="">— Ninguna —</option>
+                    {['CR', 'CT', 'MR', 'US', 'NM', 'DX', 'MG', 'XA', 'RF', 'OT'].map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>AE Title DICOM</label>
+                  <input {...regEditResource('ae_title')} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Ubicación</label>
+                  <input {...regEditResource('location')} className={inputClass} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={labelClass}>Hora inicio</label>
+                    <input {...regEditResource('operating_start_hour')} type="number" min={0} max={23} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Hora fin</label>
+                    <input {...regEditResource('operating_end_hour')} type="number" min={1} max={24} className={inputClass} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditingResource(null)}
+                  className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 font-medium text-sm">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={updateResourceMutation.isPending}
+                  className="flex-1 bg-primary-600 text-white py-2.5 rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium text-sm">
+                  {updateResourceMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* ── Audit tab ── */}

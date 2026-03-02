@@ -2,8 +2,11 @@ import { apiClient } from './client'
 import type { Appointment, Resource, TimeSlot } from '@/types'
 
 export const scheduleApi = {
-  getResources: (modality?: string) =>
-    apiClient.get<Resource[]>('/resources', { params: { modality } }).then((r) => r.data),
+  getResources: (modality?: string, available_only?: boolean) =>
+    apiClient.get<Resource[]>('/resources', { params: { modality, available_only } }).then((r) => r.data),
+
+  updateResource: (id: number, data: Partial<Resource>) =>
+    apiClient.put<Resource>(`/resources/${id}`, data).then((r) => r.data),
 
   getSlots: (resource_id: number, date: string, duration_minutes?: number) =>
     apiClient

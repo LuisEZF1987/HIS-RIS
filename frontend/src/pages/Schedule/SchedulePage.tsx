@@ -289,13 +289,18 @@ export default function SchedulePage() {
     queryFn: () => scheduleApi.getResources(),
   })
 
+  const { data: availableResources } = useQuery({
+    queryKey: ['resources', 'available'],
+    queryFn: () => scheduleApi.getResources(undefined, true),
+  })
+
   const { register, handleSubmit, control, reset, setValue, watch, formState: { errors } } = useForm<AppointmentForm>({
     defaultValues: { duration_minutes: 30 },
   })
 
   const watchedResourceId = watch('resource_id')
   const watchedOrderId = watch('order_id')
-  const selectedResource = resources?.find(r => r.id === Number(watchedResourceId))
+  const selectedResource = availableResources?.find(r => r.id === Number(watchedResourceId))
 
   const handlePatientSelect = useCallback((id: number, _name: string) => {
     setSelectedPatientId(id)
@@ -535,13 +540,13 @@ export default function SchedulePage() {
                 <label className={labelClass}>Sala / Equipo (opcional)</label>
                 <select {...register('resource_id', { valueAsNumber: true })} className={inputClass}>
                   <option value="">Sin asignar</option>
-                  {(resources || []).map((r) => (
+                  {(availableResources || []).map((r) => (
                     <option key={r.id} value={r.id}>{r.name} ({r.modality || r.resource_type})</option>
                   ))}
                 </select>
-                {(!resources || resources.length === 0) && (
+                {(!availableResources || availableResources.length === 0) && (
                   <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">
-                    No hay equipos registrados. Agregue equipos desde Administración.
+                    No hay equipos disponibles. Agregue o habilite equipos desde Administración.
                   </p>
                 )}
               </div>

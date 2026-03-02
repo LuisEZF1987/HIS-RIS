@@ -94,8 +94,8 @@ export default function NewOrderPage() {
   }
 
   const { data: resources } = useQuery({
-    queryKey: ['resources'],
-    queryFn: () => scheduleApi.getResources(),
+    queryKey: ['resources', 'available'],
+    queryFn: () => scheduleApi.getResources(undefined, true),
   })
 
   const selectedResource = resources?.find(r => r.id === Number(watchedResourceId))

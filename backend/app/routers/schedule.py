@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query
 from app.dependencies import CurrentUser, DBSession, require_permission
 from app.schemas.schedule import (
     AppointmentCreate, AppointmentResponse, AppointmentUpdate,
-    ResourceCreate, ResourceResponse, SlotResponse,
+    ResourceCreate, ResourceResponse, ResourceUpdate, SlotResponse,
 )
 from app.services.schedule_service import ScheduleService
 from app.models.schedule import Appointment, Resource
@@ -33,12 +33,36 @@ async def create_resource(data: ResourceCreate, db: DBSession):
 
 @router.get("/resources", response_model=list[ResourceResponse],
             dependencies=[require_permission("appointments:read")])
-async def list_resources(db: DBSession, modality: Optional[str] = None):
+async def list_resources(
+    db: DBSession,
+    modality: Optional[str] = None,
+    available_only: bool = False,
+):
     stmt = select(Resource)
     if modality:
         stmt = stmt.where(Resource.modality == modality)
+    if available_only:
+        stmt = stmt.where(Resource.is_available == True)  # noqa: E712
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+@router.put("/resources/{resource_id}", response_model=ResourceResponse,
+            dependencies=[require_permission("admin:access")])
+async def update_resource(resource_id: int, data: ResourceUpdate, db: DBSession):
+    from app.core.exceptions import NotFoundError
+
+    result = await db.execute(select(Resource).where(Resource.id == resource_id))
+    resource = result.scalar_one_or_none()
+    if not resource:
+        raise NotFoundError(f"Resource {resource_id} not found")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(resource, field, value)
+
+    await db.flush()
+    return resource
 
 
 # ── Slots ──────────────────────────────────────────────────────────────────────

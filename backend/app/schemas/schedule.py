@@ -27,6 +27,18 @@ class ResourceResponse(ResourceCreate):
     model_config = {"from_attributes": True}
 
 
+class ResourceUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    resource_type: Optional[ResourceType] = None
+    modality: Optional[str] = Field(None, max_length=10)
+    ae_title: Optional[str] = Field(None, max_length=50)
+    location: Optional[str] = Field(None, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    is_available: Optional[bool] = None
+    operating_start_hour: Optional[int] = Field(None, ge=0, le=23)
+    operating_end_hour: Optional[int] = Field(None, ge=1, le=24)
+
+
 class AppointmentCreate(BaseModel):
     patient_id: int
     order_id: Optional[int] = None
