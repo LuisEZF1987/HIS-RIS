@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ordersApi } from '@/api/orders'
 import { apiClient } from '@/api/client'
-import { ListChecks, RefreshCw, FlaskConical } from 'lucide-react'
+import { ListChecks, RefreshCw, FlaskConical, Download } from 'lucide-react'
+import { exportApi } from '@/api/export'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 
@@ -16,6 +17,7 @@ export default function WorklistPage() {
   const [modality, setModality] = useState('')
   const [simulating, setSimulating] = useState<number | null>(null)
   const queryClient = useQueryClient()
+  const simulatorEnabled = localStorage.getItem('his_ris_simulator_enabled') !== 'false'
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['worklist', modality],
@@ -62,6 +64,16 @@ export default function WorklistPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="relative group">
+            <button className="flex items-center gap-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm">
+              <Download className="w-4 h-4" />
+              Exportar
+            </button>
+            <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 hidden group-hover:block z-10">
+              <button onClick={() => exportApi.worklist('csv')} className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">CSV</button>
+              <button onClick={() => exportApi.worklist('xlsx')} className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">Excel</button>
+            </div>
+          </div>
           <select
             value={modality}
             onChange={(e) => setModality(e.target.value)}
@@ -95,7 +107,7 @@ export default function WorklistPage() {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-700">
               <tr>
-                {['Nº Acceso', 'Paciente', 'Cédula', 'Modalidad', 'Procedimiento', 'Programado', 'AE Title', 'Acción'].map((h) => (
+                {['Nº Acceso', 'Paciente', 'Cédula', 'Modalidad', 'Procedimiento', 'Programado', 'AE Title', ...(simulatorEnabled ? ['Acción'] : [])].map((h) => (
                   <th key={h} className="text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-4 py-3">{h}</th>
                 ))}
               </tr>
@@ -118,17 +130,19 @@ export default function WorklistPage() {
                   <td className="px-4 py-3 text-sm font-mono text-gray-500 dark:text-slate-400">
                     {entry.scheduled_station_ae_title || '—'}
                   </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleSimulate(entry.id, entry.accession_number)}
-                      disabled={simulating === entry.id}
-                      title="Simular llegada de estudio DICOM"
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700 rounded-lg text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 disabled:opacity-50 transition-colors"
-                    >
-                      <FlaskConical className={`w-3.5 h-3.5 ${simulating === entry.id ? 'animate-pulse' : ''}`} />
-                      {simulating === entry.id ? 'Simulando...' : 'Simular'}
-                    </button>
-                  </td>
+                  {simulatorEnabled && (
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleSimulate(entry.id, entry.accession_number)}
+                        disabled={simulating === entry.id}
+                        title="Simular llegada de estudio DICOM"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700 rounded-lg text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 disabled:opacity-50 transition-colors"
+                      >
+                        <FlaskConical className={`w-3.5 h-3.5 ${simulating === entry.id ? 'animate-pulse' : ''}`} />
+                        {simulating === entry.id ? 'Simulando...' : 'Simular'}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -144,14 +158,16 @@ export default function WorklistPage() {
       </div>
 
       {/* Simulation info */}
-      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 text-sm text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-700">
-        <p className="font-semibold mb-1">Simulación de Estudio</p>
-        <p>
-          El botón <strong>Simular</strong> envía un webhook al sistema como si el equipo de imagen hubiera
-          enviado el estudio vía DICOM C-STORE. Útil para pruebas sin equipo físico conectado.
-          La orden pasará a estado <strong>COMPLETED</strong>.
-        </p>
-      </div>
+      {simulatorEnabled && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 text-sm text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-700">
+          <p className="font-semibold mb-1">Simulación de Estudio</p>
+          <p>
+            El botón <strong>Simular</strong> envía un webhook al sistema como si el equipo de imagen hubiera
+            enviado el estudio vía DICOM C-STORE. Útil para pruebas sin equipo físico conectado.
+            La orden pasará a estado <strong>COMPLETED</strong>.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

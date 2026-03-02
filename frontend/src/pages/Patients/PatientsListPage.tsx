@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { patientsApi } from '@/api/patients'
 import { useAuthStore } from '@/store/authStore'
-import { Search, Plus, User, ChevronLeft, ChevronRight, Pencil, UserX, X, Save } from 'lucide-react'
+import { Search, Plus, User, ChevronLeft, ChevronRight, Pencil, UserX, X, Save, Download } from 'lucide-react'
+import { exportApi } from '@/api/export'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useForm } from 'react-hook-form'
@@ -118,13 +119,25 @@ export default function PatientsListPage() {
             {data?.total ?? 0} pacientes registrados
           </p>
         </div>
-        <Link
-          to="/patients/new"
-          className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Paciente
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="relative group">
+            <button className="flex items-center gap-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm">
+              <Download className="w-4 h-4" />
+              Exportar
+            </button>
+            <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 hidden group-hover:block z-10">
+              <button onClick={() => exportApi.patients('csv')} className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">CSV</button>
+              <button onClick={() => exportApi.patients('xlsx')} className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">Excel</button>
+            </div>
+          </div>
+          <Link
+            to="/patients/new"
+            className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Paciente
+          </Link>
+        </div>
       </div>
 
       {/* Search */}

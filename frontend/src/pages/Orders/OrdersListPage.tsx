@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ordersApi } from '@/api/orders'
 import { useAuthStore } from '@/store/authStore'
-import { Plus, ChevronLeft, ChevronRight, Pencil, XCircle, X, Save } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Pencil, XCircle, X, Save, Download } from 'lucide-react'
+import { exportApi } from '@/api/export'
 import { format, parseISO } from 'date-fns'
 import { useForm, Controller } from 'react-hook-form'
 import { DateTimePicker } from '@/components/DateTimePicker'
@@ -120,10 +121,22 @@ export default function OrdersListPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Órdenes de Imagen</h1>
           <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">{data?.total ?? 0} órdenes</p>
         </div>
-        <Link to="/orders/new" className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium">
-          <Plus className="w-4 h-4" />
-          Nueva Orden
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="relative group">
+            <button className="flex items-center gap-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm">
+              <Download className="w-4 h-4" />
+              Exportar
+            </button>
+            <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 hidden group-hover:block z-10">
+              <button onClick={() => exportApi.orders('csv', statusFilter || undefined)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">CSV</button>
+              <button onClick={() => exportApi.orders('xlsx', statusFilter || undefined)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">Excel</button>
+            </div>
+          </div>
+          <Link to="/orders/new" className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium">
+            <Plus className="w-4 h-4" />
+            Nueva Orden
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
