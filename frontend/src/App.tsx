@@ -15,6 +15,8 @@ import ReportsListPage from '@/pages/Reports/ReportsListPage'
 import ReportEditorPage from '@/pages/Reports/ReportEditorPage'
 import SchedulePage from '@/pages/Schedule/SchedulePage'
 import AdminPage from '@/pages/Admin/AdminPage'
+import ChangePasswordPage from '@/pages/Profile/ChangePasswordPage'
+import StatisticsPage from '@/pages/Statistics/StatisticsPage'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -53,7 +55,9 @@ export default function App() {
           <Route path="/reports/:id" element={<ReportEditorPage />} />
 
           <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/statistics" element={<StatisticsPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/profile/change-password" element={<ChangePasswordPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

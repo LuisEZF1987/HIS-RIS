@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/authStore'
+import { useSessionStore } from '@/store/sessionStore'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -56,7 +57,7 @@ apiClient.interceptors.response.use(
       const refreshToken = useAuthStore.getState().refreshToken
 
       if (!refreshToken) {
-        useAuthStore.getState().logout()
+        useSessionStore.getState().setShowExpiredModal(true)
         isRefreshing = false
         return Promise.reject(error)
       }
@@ -72,7 +73,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError)
-        useAuthStore.getState().logout()
+        useSessionStore.getState().setShowExpiredModal(true)
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

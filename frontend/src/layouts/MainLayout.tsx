@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
 import { authApi } from '@/api/auth'
@@ -7,9 +7,13 @@ import toast from 'react-hot-toast'
 import {
   LayoutDashboard, Users, FileText, Calendar, Settings,
   ClipboardList, ListChecks, Menu, X, LogOut, User,
-  Stethoscope, Sun, Moon,
+  Stethoscope, Sun, Moon, KeyRound, ChevronDown, Search,
+  Bell, BarChart3,
 } from 'lucide-react'
 import { clsx } from 'clsx'
+import SessionExpiredModal from '@/components/SessionExpiredModal'
+import GlobalSearchModal from '@/components/GlobalSearchModal'
+import NotificationBell from '@/components/NotificationBell'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard',       icon: LayoutDashboard, roles: ['admin', 'receptionist', 'technician', 'radiologist', 'physician'] },
@@ -18,6 +22,7 @@ const navItems = [
   { to: '/worklist',  label: 'Worklist DICOM',   icon: ListChecks,      roles: ['admin', 'technician', 'radiologist'] },
   { to: '/reports',   label: 'Informes',          icon: FileText,        roles: ['admin', 'radiologist', 'physician'] },
   { to: '/schedule',  label: 'Agenda',            icon: Calendar,        roles: ['admin', 'receptionist', 'technician'] },
+  { to: '/statistics', label: 'Estadísticas',       icon: BarChart3,       roles: ['admin', 'radiologist'] },
   { to: '/admin',     label: 'Administración',    icon: Settings,        roles: ['admin'] },
 ]
 
@@ -25,6 +30,32 @@ export default function MainLayout() {
   const { user, logout } = useAuthStore()
   const { sidebarOpen, toggleSidebar, theme, toggleTheme } = useUIStore()
   const navigate = useNavigate()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Ctrl+K global search shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   // Sync dark class on mount (in case hydration happened before this component rendered)
   useEffect(() => {
@@ -133,23 +164,31 @@ export default function MainLayout() {
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
+          {/* Search button */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 dark:text-slate-500 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+            <span className="hidden sm:inline">Buscar...</span>
+            <kbd className="hidden sm:inline-block text-xs bg-white dark:bg-slate-600 px-1.5 py-0.5 rounded shadow-sm">
+              Ctrl+K
+            </kbd>
+          </button>
+
           <div className="flex-1" />
 
-          {/* Right side: user info + theme toggle */}
+          {/* Right side: notifications + theme toggle + user dropdown */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <Stethoscope className="w-4 h-4" />
-              <span className="font-medium">{user?.full_name}</span>
-              <span className="text-gray-400 dark:text-gray-600">·</span>
-              <span className="capitalize text-primary-600 dark:text-blue-400">{user?.role}</span>
-            </div>
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               className={clsx(
-                'ml-2 p-2 rounded-full transition-all duration-200',
+                'p-2 rounded-full transition-all duration-200',
                 theme === 'dark'
                   ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
@@ -157,6 +196,42 @@ export default function MainLayout() {
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
+
+            {/* User dropdown */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <Stethoscope className="w-4 h-4" />
+                <span className="font-medium">{user?.full_name}</span>
+                <ChevronDown className={clsx('w-3 h-3 transition-transform', userMenuOpen && 'rotate-180')} />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 py-2 z-50">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-700">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.full_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 capitalize">{user?.role}</p>
+                  </div>
+                  <Link
+                    to="/profile/change-password"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    Cambiar Contraseña
+                  </Link>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); handleLogout() }}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-slate-700"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -165,6 +240,9 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+
+      <SessionExpiredModal />
+      <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   )
 }

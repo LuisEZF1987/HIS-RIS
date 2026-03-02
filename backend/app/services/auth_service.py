@@ -75,6 +75,12 @@ class AuthService:
             expires_in=settings.access_token_expire_minutes * 60,
         )
 
+    async def change_password(self, user: "User", current_password: str, new_password: str) -> None:
+        if not verify_password(current_password, user.hashed_password):
+            raise BadRequestError("La contraseña actual es incorrecta")
+        user.hashed_password = get_password_hash(new_password)
+        await self.db.flush()
+
     async def create_user(
         self,
         username: str,
