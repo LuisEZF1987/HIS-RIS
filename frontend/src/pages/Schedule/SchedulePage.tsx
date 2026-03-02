@@ -31,6 +31,8 @@ interface AppointmentForm {
   start_datetime: string
   duration_minutes: number
   notes?: string
+  modality?: string
+  procedure_description?: string
 }
 
 const inputClass =
@@ -292,6 +294,7 @@ export default function SchedulePage() {
   })
 
   const watchedResourceId = watch('resource_id')
+  const watchedOrderId = watch('order_id')
   const selectedResource = resources?.find(r => r.id === Number(watchedResourceId))
 
   const handlePatientSelect = useCallback((id: number, _name: string) => {
@@ -301,6 +304,10 @@ export default function SchedulePage() {
 
   const mutation = useMutation({
     mutationFn: (data: AppointmentForm) => {
+      // Require modality + procedure_description when no order is linked
+      if (!data.order_id && (!data.modality || !data.procedure_description)) {
+        throw { response: { data: { detail: 'Debe indicar modalidad y procedimiento, o vincular una orden existente' } } }
+      }
       // Client-side validation: no past dates
       const startDt = new Date(data.start_datetime)
       if (startDt < new Date()) {
@@ -323,10 +330,14 @@ export default function SchedulePage() {
         order_id: data.order_id ? Number(data.order_id) : undefined,
         resource_id: data.resource_id ? Number(data.resource_id) : undefined,
         start_datetime: toLocalISOString(data.start_datetime),
+        modality: data.modality || undefined,
+        procedure_description: data.procedure_description || undefined,
       })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['worklist'] })
       toast.success('Cita creada exitosamente')
       setShowModal(false)
       setSelectedPatientId(0)
@@ -490,6 +501,34 @@ export default function SchedulePage() {
                   placeholder="Vincular a una orden existente"
                 />
               </div>
+
+              {/* Study info — shown when no order_id to auto-create order + worklist */}
+              {!watchedOrderId && (
+                <div className="space-y-3 bg-gray-50 dark:bg-slate-700/30 rounded-lg p-3 border border-gray-200 dark:border-slate-600">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+                    Datos del Estudio (se creará orden + worklist automáticamente)
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Modalidad *</label>
+                      <select {...register('modality')} className={inputClass}>
+                        <option value="">Seleccionar</option>
+                        {['CR', 'CT', 'MR', 'US', 'NM', 'DX', 'MG', 'XA', 'RF', 'OT'].map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Procedimiento *</label>
+                      <input
+                        {...register('procedure_description')}
+                        className={inputClass}
+                        placeholder="Ej: Rx Tórax PA"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Resource */}
               <div>

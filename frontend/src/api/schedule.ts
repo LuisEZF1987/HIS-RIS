@@ -24,6 +24,8 @@ export const scheduleApi = {
     start_datetime: string
     duration_minutes?: number
     notes?: string
+    modality?: string
+    procedure_description?: string
   }) => apiClient.post<Appointment>('/appointments', data).then((r) => r.data),
 
   updateAppointment: (id: number, data: Partial<{ status: string; start_datetime: string; duration_minutes: number }>) =>

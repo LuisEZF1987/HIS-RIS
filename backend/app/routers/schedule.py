@@ -60,6 +60,46 @@ async def get_slots(
 @router.post("/appointments", response_model=AppointmentResponse, status_code=201,
              dependencies=[require_permission("appointments:write")])
 async def create_appointment(data: AppointmentCreate, db: DBSession, current_user: CurrentUser):
+    from app.models.order import ImagingOrder, Modality, OrderStatus, generate_accession_number
+    from app.services.worklist_service import WorklistService
+
+    # Auto-create an order + worklist if no order_id provided
+    if not data.order_id and data.modality and data.procedure_description:
+        # Verify patient exists
+        p_result = await db.execute(select(Patient).where(Patient.id == data.patient_id))
+        patient = p_result.scalar_one_or_none()
+        if not patient:
+            from app.core.exceptions import NotFoundError
+            raise NotFoundError(f"Patient {data.patient_id} not found")
+
+        # Resolve resource for AE title
+        resource = None
+        if data.resource_id:
+            r_result = await db.execute(select(Resource).where(Resource.id == data.resource_id))
+            resource = r_result.scalar_one_or_none()
+
+        order = ImagingOrder(
+            patient_id=data.patient_id,
+            requesting_physician_id=current_user.id,
+            accession_number=generate_accession_number(),
+            modality=Modality(data.modality),
+            procedure_description=data.procedure_description,
+            status=OrderStatus.scheduled,
+            scheduled_at=data.start_datetime,
+        )
+        db.add(order)
+        await db.flush()
+
+        # Auto-generate worklist entry
+        worklist_svc = WorklistService(db)
+        await worklist_svc.create_worklist_entry(
+            order, patient,
+            ae_title=resource.ae_title if resource else None,
+            station_name=resource.name if resource else None,
+        )
+
+        data.order_id = order.id
+
     svc = ScheduleService(db)
     return await svc.create_appointment(data)
 

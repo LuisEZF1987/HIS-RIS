@@ -34,6 +34,9 @@ class AppointmentCreate(BaseModel):
     start_datetime: datetime
     duration_minutes: int = Field(30, ge=5, le=480)
     notes: Optional[str] = None
+    # Optional fields to auto-create an order when no order_id is provided
+    modality: Optional[str] = Field(None, max_length=10)
+    procedure_description: Optional[str] = Field(None, max_length=500)
 
     @model_validator(mode="after")
     def compute_end_and_validate(self):
