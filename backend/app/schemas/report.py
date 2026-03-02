@@ -69,6 +69,7 @@ class ReportResponse(BaseModel):
     signature_hash: Optional[str] = None
     signed_at: Optional[datetime] = None
     signed_by: Optional[str] = None
+    modality: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     versions: List[ReportVersionResponse] = []

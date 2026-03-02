@@ -88,7 +88,7 @@ export default function StatisticsPage() {
 
         {/* Turnaround Time */}
         <div className={cardClass}>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tiempo Promedio de Turno (horas)</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tiempo Promedio de Turno (minutos)</h2>
           {turnaroundData?.length ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={turnaroundData} layout="vertical">
@@ -96,7 +96,7 @@ export default function StatisticsPage() {
                 <XAxis type="number" tick={{ fontSize: 12 }} stroke="currentColor" className="text-gray-400 dark:text-slate-500" />
                 <YAxis type="category" dataKey="month" tick={{ fontSize: 12 }} width={70} stroke="currentColor" className="text-gray-400 dark:text-slate-500" />
                 <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px' }} />
-                <Bar dataKey="avg_hours" name="Horas promedio" fill="#10b981" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="avg_minutes" name="Minutos promedio" fill="#10b981" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

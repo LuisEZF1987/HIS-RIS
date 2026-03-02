@@ -187,6 +187,7 @@ export interface RadiologyReport {
   signature_hash?: string
   signed_at?: string
   signed_by?: string
+  modality?: string
   created_at: string
   updated_at: string
   versions: ReportVersion[]

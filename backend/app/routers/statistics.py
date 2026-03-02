@@ -45,8 +45,8 @@ async def turnaround_time(
         select(
             func.to_char(ImagingOrder.completed_at, "YYYY-MM").label("month"),
             func.avg(
-                extract("epoch", ImagingOrder.completed_at - ImagingOrder.requested_at) / 3600.0
-            ).label("avg_hours"),
+                extract("epoch", ImagingOrder.completed_at - ImagingOrder.requested_at) / 60.0
+            ).label("avg_minutes"),
             func.count(ImagingOrder.id).label("count"),
         )
         .where(
@@ -60,7 +60,7 @@ async def turnaround_time(
         .order_by("month")
     )
     rows = result.all()
-    return [{"month": r.month, "avg_hours": round(float(r.avg_hours), 1) if r.avg_hours else 0, "count": r.count} for r in rows]
+    return [{"month": r.month, "avg_minutes": round(float(r.avg_minutes), 1) if r.avg_minutes else 0, "count": r.count} for r in rows]
 
 
 @router.get("/radiologist-productivity", summary="Reports signed per radiologist per month")

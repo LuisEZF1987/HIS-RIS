@@ -57,12 +57,21 @@ class ReportService:
     async def get_by_id(self, report_id: int) -> RadiologyReport:
         result = await self.db.execute(
             select(RadiologyReport)
-            .options(selectinload(RadiologyReport.versions))
+            .options(
+                selectinload(RadiologyReport.versions),
+                selectinload(RadiologyReport.study)
+                .selectinload(ImagingStudy.order),
+            )
             .where(RadiologyReport.id == report_id)
         )
         report = result.scalar_one_or_none()
         if not report:
             raise NotFoundError(f"Report {report_id} not found")
+        # Enrich with modality from study/order
+        if report.study:
+            report.modality = report.study.modality or (
+                report.study.order.modality.value if report.study.order else None
+            )
         return report
 
     async def update_report(self, report_id: int, data: ReportUpdate, user: User) -> RadiologyReport:

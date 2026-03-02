@@ -110,7 +110,7 @@ export default function ReportEditorPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {!isSigned && <TemplateSelector onSelect={applyTemplate} />}
+          {!isSigned && <TemplateSelector modality={report?.modality} onSelect={applyTemplate} />}
           {isSigned && (
             <button
               onClick={downloadPdf}

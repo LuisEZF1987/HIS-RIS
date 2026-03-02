@@ -8,7 +8,7 @@ export interface OrdersByModality {
 
 export interface TurnaroundTime {
   month: string
-  avg_hours: number
+  avg_minutes: number
   count: number
 }
 
