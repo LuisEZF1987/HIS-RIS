@@ -12,7 +12,7 @@ from app.config import get_settings
 from app.core.middleware import AuditLogMiddleware, RequestIDMiddleware, SecurityHeadersMiddleware, TimingMiddleware
 import app.db.base  # noqa: F401 — registers all ORM models with SQLAlchemy mapper
 from app.db.session import engine
-from app.routers import admin, adt, auth, dicom, fhir, hl7, orthanc, reports, ris, schedule
+from app.routers import admin, adt, auth, dashboard, dicom, export, fhir, hl7, notifications, orthanc, reports, ris, schedule, search, statistics, templates
 
 settings = get_settings()
 logging.basicConfig(level=logging.DEBUG if settings.debug else logging.INFO)
@@ -87,6 +87,12 @@ app.include_router(dicom.router, prefix=PREFIX)
 app.include_router(orthanc.router, prefix=PREFIX)
 app.include_router(admin.router, prefix=PREFIX)
 app.include_router(hl7.router, prefix=PREFIX)
+app.include_router(search.router, prefix=PREFIX)
+app.include_router(dashboard.router, prefix=PREFIX)
+app.include_router(templates.router, prefix=PREFIX)
+app.include_router(export.router, prefix=PREFIX)
+app.include_router(statistics.router, prefix=PREFIX)
+app.include_router(notifications.router, prefix=PREFIX)
 # FHIR routes use their own prefix /fhir/r4
 app.include_router(fhir.router)
 

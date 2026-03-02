@@ -3,11 +3,16 @@ import { useAuthStore } from '@/store/authStore'
 import { ordersApi } from '@/api/orders'
 import { patientsApi } from '@/api/patients'
 import { reportsApi } from '@/api/reports'
-import { Users, ClipboardList, ListChecks, Activity, TrendingUp, FileText } from 'lucide-react'
+import { dashboardApi } from '@/api/dashboard'
+import { Users, ClipboardList, ListChecks, Activity, TrendingUp, TrendingDown, FileText, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { format, parseISO } from 'date-fns'
+import { es } from 'date-fns/locale'
 
-function StatCard({ title, value, icon: Icon, color, to }: {
+function StatCard({ title, value, icon: Icon, color, to, trend }: {
   title: string; value?: number; icon: any; color: string; to: string
+  trend?: { value: number; label: string }
 }) {
   return (
     <Link to={to} className="block bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow">
@@ -15,6 +20,18 @@ function StatCard({ title, value, icon: Icon, color, to }: {
         <div>
           <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{title}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value ?? '...'}</p>
+          {trend && (
+            <div className="flex items-center gap-1 mt-1">
+              {trend.value >= 0 ? (
+                <TrendingUp className="w-3 h-3 text-green-500" />
+              ) : (
+                <TrendingDown className="w-3 h-3 text-red-500" />
+              )}
+              <span className={`text-xs font-medium ${trend.value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {trend.value > 0 ? '+' : ''}{trend.value}% {trend.label}
+              </span>
+            </div>
+          )}
         </div>
         <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
@@ -55,12 +72,28 @@ export default function DashboardPage() {
     select: (studies) => studies.filter((s) => !s.report_id),
   })
 
+  const { data: dashStats } = useQuery({
+    queryKey: ['dashboard', 'stats'],
+    queryFn: () => dashboardApi.getStats(),
+  })
+
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Buenos días'
     if (hour < 18) return 'Buenas tardes'
     return 'Buenas noches'
   }
+
+  // Calculate trend percentages
+  const orderTrend = dashStats && dashStats.last_week_orders > 0
+    ? Math.round(((dashStats.this_week_orders - dashStats.last_week_orders) / dashStats.last_week_orders) * 100)
+    : undefined
+
+  // Format chart data
+  const chartData = (dashStats?.orders_by_day || []).map((d) => ({
+    ...d,
+    label: format(parseISO(d.date), 'EEE dd', { locale: es }),
+  }))
 
   return (
     <div className="space-y-6">
@@ -87,6 +120,7 @@ export default function DashboardPage() {
           icon={ClipboardList}
           color="bg-orange-500"
           to="/orders?status=REQUESTED"
+          trend={orderTrend !== undefined ? { value: orderTrend, label: 'vs semana ant.' } : undefined}
         />
         <StatCard
           title="Órdenes Programadas"
@@ -103,23 +137,64 @@ export default function DashboardPage() {
           to="/worklist"
         />
         {['admin', 'radiologist'].includes(user?.role || '') && (
-          <StatCard
-            title="Sin Informe"
-            value={pendingStudies?.length}
-            icon={FileText}
-            color="bg-red-500"
-            to="/reports"
-          />
+          <>
+            <StatCard
+              title="Sin Informe"
+              value={pendingStudies?.length}
+              icon={FileText}
+              color="bg-red-500"
+              to="/reports"
+            />
+            <StatCard
+              title="Informes Sin Firmar"
+              value={dashStats?.unsigned_reports}
+              icon={FileText}
+              color="bg-amber-500"
+              to="/reports"
+            />
+          </>
         )}
+        <StatCard
+          title="Completados Hoy"
+          value={dashStats?.today_completed}
+          icon={CheckCircle2}
+          color="bg-teal-500"
+          to="/orders?status=COMPLETED"
+        />
       </div>
 
-      {/* Recent orders */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Órdenes Recientes</h2>
-          <Link to="/orders" className="text-primary-600 dark:text-blue-400 text-sm hover:underline">Ver todas →</Link>
+      {/* Chart + Recent orders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Orders by day chart */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Órdenes por Día</h2>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-200 dark:text-slate-700" />
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="currentColor" className="text-gray-400 dark:text-slate-500" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} stroke="currentColor" className="text-gray-400 dark:text-slate-500" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--color-bg, #fff)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px' }}
+                />
+                <Bar dataKey="count" name="Órdenes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-gray-400 dark:text-slate-500 text-sm">
+              Sin datos disponibles
+            </div>
+          )}
         </div>
-        <RecentOrdersList />
+
+        {/* Recent orders */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Órdenes Recientes</h2>
+            <Link to="/orders" className="text-primary-600 dark:text-blue-400 text-sm hover:underline">Ver todas →</Link>
+          </div>
+          <RecentOrdersList />
+        </div>
       </div>
 
       {/* Quick actions */}
