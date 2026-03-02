@@ -12,6 +12,7 @@ export interface CreateOrderData {
   clinical_indication?: string
   scheduled_at?: string
   resource_id?: number
+  duration_minutes?: number
 }
 
 export interface EditOrderData {
@@ -22,6 +23,7 @@ export interface EditOrderData {
   priority?: string
   clinical_indication?: string
   scheduled_at?: string
+  duration_minutes?: number
 }
 
 export const ordersApi = {

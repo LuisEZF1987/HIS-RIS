@@ -33,7 +33,7 @@ class OrderService:
 
         # Validate patient is not already scheduled at this time
         if data.scheduled_at:
-            end_dt_patient = data.scheduled_at + timedelta(minutes=30)
+            end_dt_patient = data.scheduled_at + timedelta(minutes=data.duration_minutes)
             patient_conflict = await self.db.execute(
                 select(Appointment).where(
                     Appointment.patient_id == data.patient_id,
@@ -46,7 +46,7 @@ class OrderService:
             if existing:
                 raise ConflictError(
                     "El paciente ya tiene un estudio programado en ese horario. "
-                    "Debe haber al menos 30 minutos entre estudios."
+                    f"Debe haber al menos {data.duration_minutes} minutos entre estudios."
                 )
 
         # Resolve resource and run all validations BEFORE creating anything
@@ -61,7 +61,7 @@ class OrderService:
 
             if data.scheduled_at and resource:
                 appt_hour = data.scheduled_at.hour
-                end_dt = data.scheduled_at + timedelta(minutes=30)
+                end_dt = data.scheduled_at + timedelta(minutes=data.duration_minutes)
                 appt_end_hour = end_dt.hour + (1 if end_dt.minute > 0 else 0)
                 # Validate operating hours
                 if appt_hour < resource.operating_start_hour or appt_end_hour > resource.operating_end_hour:
@@ -122,7 +122,7 @@ class OrderService:
                     order_id=order.id,
                     resource_id=data.resource_id,
                     start_datetime=data.scheduled_at,
-                    duration_minutes=30,
+                    duration_minutes=data.duration_minutes,
                     notes=data.procedure_description,
                 ))
             except (ConflictError, BadRequestError):

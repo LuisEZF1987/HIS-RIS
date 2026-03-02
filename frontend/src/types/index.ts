@@ -112,6 +112,7 @@ export interface ImagingOrder {
   requested_at: string
   scheduled_at?: string
   completed_at?: string
+  duration_minutes?: number
 }
 
 export interface WorklistEntry {

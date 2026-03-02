@@ -23,6 +23,7 @@ const schema = z.object({
   clinical_indication: z.string().optional(),
   scheduled_at: z.string().optional(),
   resource_id: z.number({ coerce: true }).optional(),
+  duration_minutes: z.number({ coerce: true }).default(30),
 })
 
 type FormData = z.infer<typeof schema>
@@ -58,6 +59,7 @@ export default function NewOrderPage() {
 
   const patientId = watch('patient_id')
   const watchedResourceId = watch('resource_id')
+  const watchedScheduledAt = watch('scheduled_at')
 
   // Search patients for the dropdown
   const { data: patientResults } = useQuery({
@@ -121,6 +123,7 @@ export default function NewOrderPage() {
         ...data,
         scheduled_at: data.scheduled_at ? toLocalISOString(data.scheduled_at) : undefined,
         resource_id: data.resource_id || undefined,
+        duration_minutes: data.duration_minutes || 30,
       })
     },
     onSuccess: (order) => {
@@ -295,6 +298,22 @@ export default function NewOrderPage() {
               )}
             />
           </div>
+
+          {watchedScheduledAt && (
+            <div>
+              <label className={labelClass}>Duración del Estudio</label>
+              <select {...register('duration_minutes', { valueAsNumber: true })} className={inputClass}>
+                <option value={15}>15 minutos</option>
+                <option value={30}>30 minutos</option>
+                <option value={45}>45 minutos</option>
+                <option value={60}>1 hora</option>
+                <option value={90}>1 hora 30 min</option>
+                <option value={120}>2 horas</option>
+                <option value={180}>3 horas</option>
+                <option value={240}>4 horas</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <label className={labelClass}>Equipo / Sala (opcional)</label>

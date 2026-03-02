@@ -541,6 +541,8 @@ export default function SchedulePage() {
                   <option value={60}>1 hora</option>
                   <option value={90}>1 hora 30 min</option>
                   <option value={120}>2 horas</option>
+                  <option value={180}>3 horas</option>
+                  <option value={240}>4 horas</option>
                 </select>
               </div>
 

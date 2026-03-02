@@ -46,6 +46,7 @@ interface EditForm {
   priority: string
   clinical_indication?: string
   scheduled_at?: string
+  duration_minutes?: number
 }
 
 export default function OrdersListPage() {
@@ -71,6 +72,7 @@ export default function OrdersListPage() {
       ordersApi.edit(id, {
         ...data,
         scheduled_at: data.scheduled_at ? toLocalISOString(data.scheduled_at) : undefined,
+        duration_minutes: data.duration_minutes ? Number(data.duration_minutes) : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -104,6 +106,7 @@ export default function OrdersListPage() {
       priority: o.priority,
       clinical_indication: o.clinical_indication ?? '',
       scheduled_at: o.scheduled_at ? utcToLocalNaive(o.scheduled_at) : '',
+      duration_minutes: o.duration_minutes ?? 30,
     })
   }
 
@@ -286,6 +289,20 @@ export default function OrdersListPage() {
                     <DateTimePicker value={field.value} onChange={field.onChange} />
                   )}
                 />
+              </div>
+
+              <div>
+                <label className={labelClass}>Duración del Estudio</label>
+                <select {...register('duration_minutes', { valueAsNumber: true })} className={inputClass}>
+                  <option value={15}>15 minutos</option>
+                  <option value={30}>30 minutos</option>
+                  <option value={45}>45 minutos</option>
+                  <option value={60}>1 hora</option>
+                  <option value={90}>1 hora 30 min</option>
+                  <option value={120}>2 horas</option>
+                  <option value={180}>3 horas</option>
+                  <option value={240}>4 horas</option>
+                </select>
               </div>
 
               <div className="flex gap-3 pt-2">

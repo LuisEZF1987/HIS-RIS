@@ -21,6 +21,7 @@ class ImagingOrderCreate(BaseModel):
     special_instructions: Optional[str] = None
     scheduled_at: Optional[datetime] = None
     resource_id: Optional[int] = None
+    duration_minutes: int = Field(30, ge=5, le=480)
 
     @model_validator(mode="after")
     def validate_scheduled_at(self):
@@ -50,6 +51,7 @@ class ImagingOrderEdit(BaseModel):
     priority: Optional[OrderPriority] = None
     clinical_indication: Optional[str] = None
     scheduled_at: Optional[datetime] = None
+    duration_minutes: Optional[int] = Field(None, ge=5, le=480)
 
 
 class ImagingOrderResponse(BaseModel):
