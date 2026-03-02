@@ -29,12 +29,15 @@ class WorklistService:
         # DICOM name format: LAST^FIRST
         patient_name_dicom = f"{patient.last_name.upper()}^{patient.first_name.upper()}"
 
+        # Use DNI (cédula) as DICOM patient ID when available, fallback to MRN
+        patient_id_for_dicom = patient.dni or patient.mrn
+
         scheduled_dt = order.scheduled_at or datetime.now(timezone.utc)
 
         entry = DicomWorklistEntry(
             order_id=order.id,
             accession_number=order.accession_number,
-            patient_id_dicom=patient.mrn,
+            patient_id_dicom=patient_id_for_dicom,
             patient_name_dicom=patient_name_dicom,
             patient_dob=dob_str,
             patient_sex=sex_str,
@@ -54,7 +57,7 @@ class WorklistService:
         try:
             ds = build_mwl_dataset(
                 accession_number=order.accession_number,
-                patient_id=patient.mrn,
+                patient_id=patient_id_for_dicom,
                 patient_name=patient_name_dicom,
                 patient_dob=dob_str,
                 patient_sex=sex_str,

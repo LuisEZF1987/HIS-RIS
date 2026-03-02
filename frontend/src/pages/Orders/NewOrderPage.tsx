@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Search, X } from 'lucide-react'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { useState } from 'react'
 import type { PatientListItem } from '@/types'
+import { toLocalISOString } from '@/utils/datetime'
 
 const schema = z.object({
   patient_id: z.number({ coerce: true }).positive('Seleccione un paciente'),
@@ -118,12 +119,14 @@ export default function NewOrderPage() {
       }
       return ordersApi.create({
         ...data,
-        scheduled_at: data.scheduled_at || undefined,
+        scheduled_at: data.scheduled_at ? toLocalISOString(data.scheduled_at) : undefined,
         resource_id: data.resource_id || undefined,
       })
     },
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['worklist'] })
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
       toast.success(`Orden creada: ${order.accession_number} (MWL generado)`)
       navigate('/orders')
     },

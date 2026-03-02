@@ -73,6 +73,7 @@ export default function OrdersListPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['worklist'] })
       toast.success('Orden actualizada')
       setEditingOrder(null)
       reset()
@@ -84,6 +85,7 @@ export default function OrdersListPage() {
     mutationFn: (id: number) => ordersApi.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['worklist'] })
       toast.success('Orden cancelada')
       setCancellingOrder(null)
     },

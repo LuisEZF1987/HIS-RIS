@@ -10,6 +10,7 @@ import { DateTimePicker } from '@/components/DateTimePicker'
 import toast from 'react-hot-toast'
 import { Plus, X, CalendarPlus, Search, User, Clock, FileText, ExternalLink, Calendar as CalendarIcon } from 'lucide-react'
 import type { PatientListItem, Appointment, Resource } from '@/types'
+import { toLocalISOString } from '@/utils/datetime'
 import { Link } from 'react-router-dom'
 import { format as fmtDate, parseISO } from 'date-fns'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
@@ -321,6 +322,7 @@ export default function SchedulePage() {
         patient_id: Number(data.patient_id),
         order_id: data.order_id ? Number(data.order_id) : undefined,
         resource_id: data.resource_id ? Number(data.resource_id) : undefined,
+        start_datetime: toLocalISOString(data.start_datetime),
       })
     },
     onSuccess: () => {
