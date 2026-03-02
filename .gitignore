@@ -65,3 +65,8 @@ infrastructure/orthanc/worklists/*.wl
 # Celery runtime
 backend/celerybeat-schedule
 backend/celerybeat.pid
+
+# Temp test files
+login_body.json
+login_resp.json
+token.txt
