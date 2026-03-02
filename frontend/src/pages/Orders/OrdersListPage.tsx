@@ -9,6 +9,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import toast from 'react-hot-toast'
 import type { ImagingOrder } from '@/types'
+import { toLocalISOString, utcToLocalNaive } from '@/utils/datetime'
 
 const statusColors: Record<string, string> = {
   REQUESTED:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -69,7 +70,7 @@ export default function OrdersListPage() {
     mutationFn: ({ id, data }: { id: number; data: EditForm }) =>
       ordersApi.edit(id, {
         ...data,
-        scheduled_at: data.scheduled_at || undefined,
+        scheduled_at: data.scheduled_at ? toLocalISOString(data.scheduled_at) : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -102,7 +103,7 @@ export default function OrdersListPage() {
       body_part: o.body_part ?? '',
       priority: o.priority,
       clinical_indication: o.clinical_indication ?? '',
-      scheduled_at: o.scheduled_at ? o.scheduled_at.slice(0, 16) : '',
+      scheduled_at: o.scheduled_at ? utcToLocalNaive(o.scheduled_at) : '',
     })
   }
 

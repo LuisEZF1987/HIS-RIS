@@ -14,3 +14,13 @@ export function toLocalISOString(naive: string): string {
   // naive is "YYYY-MM-DDTHH:mm", append ":00" for seconds
   return `${naive}:00${sign}${oh}:${om}`
 }
+
+/**
+ * Convert a UTC/ISO datetime string from the API (e.g. "2026-03-05T13:00:00+00:00")
+ * to a naive local datetime string ("YYYY-MM-DDTHH:mm") for use in form inputs.
+ */
+export function utcToLocalNaive(utcStr: string): string {
+  const d = new Date(utcStr)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}

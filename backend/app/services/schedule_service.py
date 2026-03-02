@@ -75,7 +75,23 @@ class ScheduleService:
                         f"'{resource.name}' ({resource.operating_start_hour}:00 - {resource.operating_end_hour}:00)"
                     )
 
-        # Check for conflicts
+        # Check patient is not double-booked at this time
+        patient_conflict = await self.db.execute(
+            select(Appointment).where(
+                Appointment.patient_id == data.patient_id,
+                Appointment.status.notin_([AppointmentStatus.cancelled, AppointmentStatus.noshow]),
+                Appointment.start_datetime < end_dt,
+                Appointment.end_datetime > data.start_datetime,
+            )
+        )
+        existing = patient_conflict.scalar_one_or_none()
+        if existing:
+            raise ConflictError(
+                "El paciente ya tiene un estudio programado en ese horario. "
+                "Debe haber al menos 30 minutos entre estudios."
+            )
+
+        # Check for resource conflicts
         if data.resource_id:
             conflict = await self.db.execute(
                 select(Appointment).where(
