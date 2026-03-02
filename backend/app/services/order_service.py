@@ -11,7 +11,7 @@ from datetime import timedelta
 from app.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.models.order import ImagingOrder, OrderStatus, generate_accession_number
 from app.models.patient import Patient
-from app.models.schedule import Resource
+from app.models.schedule import Appointment, AppointmentStatus, Resource
 from app.models.worklist import DicomWorklistEntry, WorklistStatus
 from app.schemas.order import ImagingOrderCreate, ImagingOrderEdit, ImagingOrderUpdate
 from app.services.worklist_service import WorklistService
@@ -31,6 +31,42 @@ class OrderService:
         if not patient:
             raise NotFoundError(f"Patient {data.patient_id} not found")
 
+        # Resolve resource and run all validations BEFORE creating anything
+        resource = None
+        if data.resource_id:
+            res_result = await self.db.execute(
+                select(Resource).where(Resource.id == data.resource_id)
+            )
+            resource = res_result.scalar_one_or_none()
+            if not resource:
+                raise NotFoundError(f"Recurso {data.resource_id} no encontrado")
+
+            if data.scheduled_at and resource:
+                appt_hour = data.scheduled_at.hour
+                end_dt = data.scheduled_at + timedelta(minutes=30)
+                appt_end_hour = end_dt.hour + (1 if end_dt.minute > 0 else 0)
+                # Validate operating hours
+                if appt_hour < resource.operating_start_hour or appt_end_hour > resource.operating_end_hour:
+                    raise BadRequestError(
+                        f"La hora programada está fuera del horario de operación del equipo "
+                        f"'{resource.name}' ({resource.operating_start_hour}:00 - {resource.operating_end_hour}:00)"
+                    )
+                # Validate no scheduling conflict on this resource
+                conflict = await self.db.execute(
+                    select(Appointment).where(
+                        Appointment.resource_id == data.resource_id,
+                        Appointment.status.notin_([AppointmentStatus.cancelled, AppointmentStatus.noshow]),
+                        Appointment.start_datetime < end_dt,
+                        Appointment.end_datetime > data.scheduled_at,
+                    )
+                )
+                if conflict.scalar_one_or_none():
+                    raise ConflictError(
+                        f"El equipo '{resource.name}' ya tiene un estudio programado en ese horario. "
+                        f"Seleccione otra hora u otro equipo."
+                    )
+
+        # All validations passed — create the order
         order = ImagingOrder(
             patient_id=data.patient_id,
             encounter_id=data.encounter_id,
@@ -49,27 +85,6 @@ class OrderService:
         )
         self.db.add(order)
         await self.db.flush()
-
-        # Resolve resource for AE title and validate operating hours
-        resource = None
-        if data.resource_id:
-            res_result = await self.db.execute(
-                select(Resource).where(Resource.id == data.resource_id)
-            )
-            resource = res_result.scalar_one_or_none()
-            if not resource:
-                raise NotFoundError(f"Recurso {data.resource_id} no encontrado")
-
-            # Validate operating hours if scheduled
-            if data.scheduled_at and resource:
-                appt_hour = data.scheduled_at.hour
-                end_dt = data.scheduled_at + timedelta(minutes=30)
-                appt_end_hour = end_dt.hour + (1 if end_dt.minute > 0 else 0)
-                if appt_hour < resource.operating_start_hour or appt_end_hour > resource.operating_end_hour:
-                    raise BadRequestError(
-                        f"La hora programada está fuera del horario de operación del equipo "
-                        f"'{resource.name}' ({resource.operating_start_hour}:00 - {resource.operating_end_hour}:00)"
-                    )
 
         # Auto-generate DICOM Worklist entry
         await self.worklist_svc.create_worklist_entry(
@@ -93,9 +108,9 @@ class OrderService:
                     notes=data.procedure_description,
                 ))
             except (ConflictError, BadRequestError):
-                raise  # Propagate validation errors
+                pass  # Already validated above, skip duplicate conflict
             except Exception:
-                pass  # Other errors (e.g. duplicate) are best-effort
+                pass  # Best-effort for appointment creation
 
         await self.db.flush()
         return order

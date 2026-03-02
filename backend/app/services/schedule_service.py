@@ -86,7 +86,10 @@ class ScheduleService:
                 )
             )
             if conflict.scalar_one_or_none():
-                raise ConflictError("Time slot is already booked for this resource")
+                raise ConflictError(
+                    f"El equipo ya tiene un estudio programado en ese horario. "
+                    f"Seleccione otra hora u otro equipo."
+                )
 
         appt = Appointment(
             patient_id=data.patient_id,
