@@ -17,6 +17,8 @@ class ResourceCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     is_available: bool = True
     capacity: int = Field(1, ge=1)
+    operating_start_hour: int = Field(0, ge=0, le=23)
+    operating_end_hour: int = Field(24, ge=1, le=24)
 
 
 class ResourceResponse(ResourceCreate):
@@ -34,8 +36,16 @@ class AppointmentCreate(BaseModel):
     notes: Optional[str] = None
 
     @model_validator(mode="after")
-    def compute_end(self):
-        from datetime import timedelta
+    def compute_end_and_validate(self):
+        from datetime import timedelta, timezone as tz
+        # Reject appointments in the past
+        now = datetime.now(tz.utc)
+        start = self.start_datetime
+        if start.tzinfo is None:
+            from datetime import timezone as tz2
+            start = start.replace(tzinfo=tz2.utc)
+        if start < now:
+            raise ValueError("No se puede agendar una cita en una fecha/hora pasada")
         self.end_datetime = self.start_datetime + timedelta(minutes=self.duration_minutes)
         return self
 
@@ -64,6 +74,7 @@ class AppointmentResponse(BaseModel):
     # Enriched fields (populated by the list endpoint)
     patient_name: Optional[str] = None
     procedure_description: Optional[str] = None
+    resource_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

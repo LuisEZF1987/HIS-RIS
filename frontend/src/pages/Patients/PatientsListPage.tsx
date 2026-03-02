@@ -27,6 +27,8 @@ interface EditForm {
   gender?: string
   blood_type?: string
   allergies?: string
+  date_of_birth?: string
+  notes?: string
 }
 
 export default function PatientsListPage() {
@@ -58,8 +60,19 @@ export default function PatientsListPage() {
   const { register, handleSubmit, reset } = useForm<EditForm>()
 
   const editMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: EditForm }) =>
-      patientsApi.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: EditForm }) => {
+      // Convert empty strings to undefined so backend exclude_none works correctly
+      const cleaned = {
+        ...data,
+        date_of_birth: data.date_of_birth || undefined,
+        notes: data.notes || undefined,
+        dni: data.dni || undefined,
+        gender: data.gender || undefined,
+        blood_type: data.blood_type || undefined,
+        allergies: data.allergies || undefined,
+      }
+      return patientsApi.update(id, cleaned)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       toast.success('Paciente actualizado')
@@ -91,6 +104,8 @@ export default function PatientsListPage() {
       gender: full.gender ?? '',
       blood_type: full.blood_type ?? '',
       allergies: full.allergies ?? '',
+      date_of_birth: full.date_of_birth ?? '',
+      notes: full.notes ?? '',
     })
   }
 
@@ -249,8 +264,12 @@ export default function PatientsListPage() {
                   <input {...register('last_name', { required: true })} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Cédula / DNI</label>
+                  <label className={labelClass}>Cédula de Identidad</label>
                   <input {...register('dni')} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Fecha de Nacimiento</label>
+                  <input {...register('date_of_birth')} type="date" className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Género</label>
@@ -274,6 +293,10 @@ export default function PatientsListPage() {
               <div>
                 <label className={labelClass}>Alergias</label>
                 <input {...register('allergies')} className={inputClass} placeholder="Ninguna conocida" />
+              </div>
+              <div>
+                <label className={labelClass}>Notas</label>
+                <textarea {...register('notes')} className={inputClass} rows={2} placeholder="Observaciones adicionales..." />
               </div>
 
               <div className="flex gap-3 pt-2">

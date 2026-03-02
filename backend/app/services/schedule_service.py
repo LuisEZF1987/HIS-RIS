@@ -60,6 +60,21 @@ class ScheduleService:
         from datetime import timedelta
         end_dt = data.start_datetime + timedelta(minutes=data.duration_minutes)
 
+        # Validate operating hours of the resource
+        if data.resource_id:
+            res_result = await self.db.execute(
+                select(Resource).where(Resource.id == data.resource_id)
+            )
+            resource = res_result.scalar_one_or_none()
+            if resource:
+                appt_hour = data.start_datetime.hour
+                appt_end_hour = end_dt.hour + (1 if end_dt.minute > 0 else 0)
+                if appt_hour < resource.operating_start_hour or appt_end_hour > resource.operating_end_hour:
+                    raise ConflictError(
+                        f"La cita está fuera del horario de operación del recurso "
+                        f"'{resource.name}' ({resource.operating_start_hour}:00 - {resource.operating_end_hour}:00)"
+                    )
+
         # Check for conflicts
         if data.resource_id:
             conflict = await self.db.execute(

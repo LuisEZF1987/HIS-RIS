@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/api/client'
-import type { User } from '@/types'
+import { scheduleApi } from '@/api/schedule'
+import type { User, Resource } from '@/types'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { UserPlus, Users, ShieldCheck } from 'lucide-react'
+import { UserPlus, Users, ShieldCheck, Monitor, Plus } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 const schema = z.object({
@@ -33,6 +34,17 @@ const inputClass =
 
 const labelClass = 'block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1'
 
+const resourceSchema = z.object({
+  name: z.string().min(1, 'Nombre requerido'),
+  resource_type: z.enum(['room', 'equipment', 'staff']),
+  modality: z.string().optional(),
+  ae_title: z.string().optional(),
+  location: z.string().optional(),
+  operating_start_hour: z.number({ coerce: true }).min(0).max(23).default(0),
+  operating_end_hour: z.number({ coerce: true }).min(1).max(24).default(24),
+})
+type ResourceFormData = z.infer<typeof resourceSchema>
+
 interface AuditEntry {
   id: number
   user_id?: number
@@ -46,13 +58,20 @@ interface AuditEntry {
 
 export default function AdminPage() {
   const queryClient = useQueryClient()
-  const [tab, setTab] = useState<'users' | 'audit'>('users')
+  const [tab, setTab] = useState<'users' | 'resources' | 'audit'>('users')
   const [showForm, setShowForm] = useState(false)
+  const [showResourceForm, setShowResourceForm] = useState(false)
 
   const { data: users } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => apiClient.get<User[]>('/admin/users').then((r) => r.data),
     enabled: tab === 'users',
+  })
+
+  const { data: resources } = useQuery({
+    queryKey: ['resources'],
+    queryFn: () => scheduleApi.getResources(),
+    enabled: tab === 'resources',
   })
 
   const { data: auditLogs } = useQuery({
@@ -67,6 +86,11 @@ export default function AdminPage() {
     defaultValues: { role: 'receptionist' },
   })
 
+  const { register: regResource, handleSubmit: submitResource, reset: resetResource, formState: { errors: resErrors } } = useForm<ResourceFormData>({
+    resolver: zodResolver(resourceSchema),
+    defaultValues: { resource_type: 'equipment', operating_start_hour: 0, operating_end_hour: 24 },
+  })
+
   const createMutation = useMutation({
     mutationFn: (data: FormData) => apiClient.post<User>('/admin/users', data).then((r) => r.data),
     onSuccess: (user) => {
@@ -76,6 +100,23 @@ export default function AdminPage() {
       setShowForm(false)
     },
     onError: (err: any) => toast.error(err.response?.data?.detail || 'Error'),
+  })
+
+  const createResourceMutation = useMutation({
+    mutationFn: (data: ResourceFormData) =>
+      apiClient.post('/resources', {
+        ...data,
+        modality: data.modality || undefined,
+        ae_title: data.ae_title || undefined,
+        location: data.location || undefined,
+      }).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['resources'] })
+      toast.success('Equipo/Sala creado exitosamente')
+      resetResource()
+      setShowResourceForm(false)
+    },
+    onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al crear recurso'),
   })
 
   const tabBtn = (id: typeof tab, label: string, Icon: any) => (
@@ -96,7 +137,7 @@ export default function AdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Administración</h1>
-          <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Gestión de usuarios y auditoría del sistema</p>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Gestión de usuarios, equipos y auditoría del sistema</p>
         </div>
         {tab === 'users' && (
           <button
@@ -107,11 +148,21 @@ export default function AdminPage() {
             Nuevo Usuario
           </button>
         )}
+        {tab === 'resources' && (
+          <button
+            onClick={() => setShowResourceForm(!showResourceForm)}
+            className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Equipo / Sala
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 p-1 rounded-lg w-fit">
         {tabBtn('users', 'Usuarios', Users)}
+        {tabBtn('resources', 'Equipos', Monitor)}
         {tabBtn('audit', 'Auditoría', ShieldCheck)}
       </div>
 
@@ -200,6 +251,117 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </>
+      )}
+
+      {/* ── Resources tab ── */}
+      {tab === 'resources' && (
+        <>
+          {showResourceForm && (
+            <form
+              onSubmit={submitResource((d) => createResourceMutation.mutate(d))}
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 space-y-4"
+            >
+              <h2 className="font-semibold text-gray-900 dark:text-white">Nuevo Equipo / Sala</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Nombre *</label>
+                  <input {...regResource('name')} className={inputClass} placeholder="Ej: CT1, Sala Ecografía" />
+                  {resErrors.name && <p className="text-red-500 text-xs mt-1">{resErrors.name.message}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>Tipo</label>
+                  <select {...regResource('resource_type')} className={inputClass}>
+                    <option value="equipment">Equipo</option>
+                    <option value="room">Sala</option>
+                    <option value="staff">Personal</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Modalidad DICOM</label>
+                  <select {...regResource('modality')} className={inputClass}>
+                    <option value="">— Ninguna —</option>
+                    {['CR', 'CT', 'MR', 'US', 'NM', 'DX', 'MG', 'XA', 'RF', 'OT'].map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>AE Title DICOM</label>
+                  <input {...regResource('ae_title')} className={inputClass} placeholder="Ej: CT_SCANNER_1" />
+                </div>
+                <div>
+                  <label className={labelClass}>Ubicación</label>
+                  <input {...regResource('location')} className={inputClass} placeholder="Ej: Planta Baja, Sala 3" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={labelClass}>Hora inicio</label>
+                    <input {...regResource('operating_start_hour')} type="number" min={0} max={23} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Hora fin</label>
+                    <input {...regResource('operating_end_hour')} type="number" min={1} max={24} className={inputClass} />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 dark:text-slate-500">Horario de operación: 0-24 = 24 horas. Ej: 8 a 20 = 8am a 8pm.</p>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowResourceForm(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-700">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={createResourceMutation.isPending}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 disabled:opacity-50">
+                  {createResourceMutation.isPending ? 'Creando...' : 'Crear Equipo'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+            {!resources?.length ? (
+              <div className="p-8 text-center text-gray-500 dark:text-slate-400">
+                <Monitor className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-slate-600" />
+                <p>No hay equipos registrados</p>
+                <p className="text-xs mt-1">Haga clic en "Nuevo Equipo / Sala" para agregar uno</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-slate-900/50 border-b dark:border-slate-700">
+                  <tr>
+                    {['Nombre', 'Tipo', 'Modalidad', 'AE Title', 'Ubicación', 'Horario', 'Estado'].map((h) => (
+                      <th key={h} className="text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-4 py-3">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-slate-700">
+                  {resources.map((r) => (
+                    <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-slate-100">{r.name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-slate-400 capitalize">{r.resource_type}</td>
+                      <td className="px-4 py-3">
+                        {r.modality ? (
+                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold px-2 py-1 rounded">{r.modality}</span>
+                        ) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-mono text-gray-500 dark:text-slate-400">{r.ae_title || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-slate-400">{r.location || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-slate-400">
+                        {r.operating_start_hour}:00 - {r.operating_end_hour}:00
+                        {r.operating_start_hour === 0 && r.operating_end_hour === 24 && ' (24h)'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${r.is_available ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                          {r.is_available ? 'Disponible' : 'No disponible'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </>
       )}

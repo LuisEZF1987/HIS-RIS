@@ -7,9 +7,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import BadRequestError, NotFoundError
+from datetime import timedelta
+from app.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.models.order import ImagingOrder, OrderStatus, generate_accession_number
 from app.models.patient import Patient
+from app.models.schedule import Resource
 from app.models.worklist import DicomWorklistEntry, WorklistStatus
 from app.schemas.order import ImagingOrderCreate, ImagingOrderEdit, ImagingOrderUpdate
 from app.services.worklist_service import WorklistService
@@ -48,8 +50,33 @@ class OrderService:
         self.db.add(order)
         await self.db.flush()
 
+        # Resolve resource for AE title and validate operating hours
+        resource = None
+        if data.resource_id:
+            res_result = await self.db.execute(
+                select(Resource).where(Resource.id == data.resource_id)
+            )
+            resource = res_result.scalar_one_or_none()
+            if not resource:
+                raise NotFoundError(f"Recurso {data.resource_id} no encontrado")
+
+            # Validate operating hours if scheduled
+            if data.scheduled_at and resource:
+                appt_hour = data.scheduled_at.hour
+                end_dt = data.scheduled_at + timedelta(minutes=30)
+                appt_end_hour = end_dt.hour + (1 if end_dt.minute > 0 else 0)
+                if appt_hour < resource.operating_start_hour or appt_end_hour > resource.operating_end_hour:
+                    raise BadRequestError(
+                        f"La hora programada está fuera del horario de operación del equipo "
+                        f"'{resource.name}' ({resource.operating_start_hour}:00 - {resource.operating_end_hour}:00)"
+                    )
+
         # Auto-generate DICOM Worklist entry
-        await self.worklist_svc.create_worklist_entry(order, patient)
+        await self.worklist_svc.create_worklist_entry(
+            order, patient,
+            ae_title=resource.ae_title if resource else None,
+            station_name=resource.name if resource else None,
+        )
 
         # Update status to scheduled if datetime provided
         if data.scheduled_at:
@@ -60,13 +87,15 @@ class OrderService:
                 await sched_svc.create_appointment(AppointmentCreate(
                     patient_id=patient.id,
                     order_id=order.id,
+                    resource_id=data.resource_id,
                     start_datetime=data.scheduled_at,
                     duration_minutes=30,
                     notes=data.procedure_description,
                 ))
+            except (ConflictError, BadRequestError):
+                raise  # Propagate validation errors
             except Exception:
-                # Appointment creation is best-effort; don't fail the order
-                pass
+                pass  # Other errors (e.g. duplicate) are best-effort
 
         await self.db.flush()
         return order

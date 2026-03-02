@@ -54,6 +54,7 @@ class PatientResponse(BaseModel):
     dni: Optional[str] = None
     blood_type: Optional[BloodType] = None
     allergies: Optional[str] = None
+    notes: Optional[str] = None
     is_active: bool
     contacts: List[PatientContactResponse] = []
     created_at: datetime

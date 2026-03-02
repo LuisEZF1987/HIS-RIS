@@ -111,7 +111,7 @@ export default function NewPatientPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="DNI / Cédula">
+            <FormField label="Cédula de Identidad">
               <input {...register('dni')} className={inputClass} placeholder="12345678" />
             </FormField>
             <FormField label="Tipo de Sangre">

@@ -9,7 +9,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import toast from 'react-hot-toast'
 import { Plus, X, CalendarPlus, Search, User, Clock, FileText, ExternalLink, Calendar as CalendarIcon } from 'lucide-react'
-import type { PatientListItem, Appointment } from '@/types'
+import type { PatientListItem, Appointment, Resource } from '@/types'
 import { Link } from 'react-router-dom'
 import { format as fmtDate, parseISO } from 'date-fns'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
@@ -226,6 +226,14 @@ function AppointmentDetailModal({
             </div>
           </div>
 
+          {/* Resource */}
+          {appointment.resource_name && (
+            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg px-4 py-2.5 text-sm">
+              <span className="text-gray-500 dark:text-slate-400">Equipo / Sala: </span>
+              <span className="font-semibold text-gray-900 dark:text-slate-100">{appointment.resource_name}</span>
+            </div>
+          )}
+
           {/* Order ID */}
           {appointment.order_id && (
             <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg px-4 py-2.5 text-sm">
@@ -265,6 +273,7 @@ export default function SchedulePage() {
   const [showModal, setShowModal] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState<number>(0)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
+  const [resourceFilter, setResourceFilter] = useState<string>('')
   const queryClient = useQueryClient()
 
   const { data: appointments } = useQuery({
@@ -277,9 +286,12 @@ export default function SchedulePage() {
     queryFn: () => scheduleApi.getResources(),
   })
 
-  const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<AppointmentForm>({
+  const { register, handleSubmit, control, reset, setValue, watch, formState: { errors } } = useForm<AppointmentForm>({
     defaultValues: { duration_minutes: 30 },
   })
+
+  const watchedResourceId = watch('resource_id')
+  const selectedResource = resources?.find(r => r.id === Number(watchedResourceId))
 
   const handlePatientSelect = useCallback((id: number, _name: string) => {
     setSelectedPatientId(id)
@@ -287,13 +299,30 @@ export default function SchedulePage() {
   }, [setValue])
 
   const mutation = useMutation({
-    mutationFn: (data: AppointmentForm) =>
-      scheduleApi.createAppointment({
+    mutationFn: (data: AppointmentForm) => {
+      // Client-side validation: no past dates
+      const startDt = new Date(data.start_datetime)
+      if (startDt < new Date()) {
+        throw { response: { data: { detail: 'No se puede agendar una cita en una fecha/hora pasada' } } }
+      }
+      // Client-side validation: operating hours
+      if (data.resource_id) {
+        const res = resources?.find(r => r.id === Number(data.resource_id))
+        if (res) {
+          const hour = startDt.getHours()
+          const endHour = hour + Math.ceil(data.duration_minutes / 60)
+          if (hour < res.operating_start_hour || endHour > res.operating_end_hour) {
+            throw { response: { data: { detail: `La cita está fuera del horario de operación de '${res.name}' (${res.operating_start_hour}:00 - ${res.operating_end_hour}:00)` } } }
+          }
+        }
+      }
+      return scheduleApi.createAppointment({
         ...data,
         patient_id: Number(data.patient_id),
         order_id: data.order_id ? Number(data.order_id) : undefined,
         resource_id: data.resource_id ? Number(data.resource_id) : undefined,
-      }),
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       toast.success('Cita creada exitosamente')
@@ -307,11 +336,18 @@ export default function SchedulePage() {
   })
 
   // Build enriched calendar events
-  const events = (appointments || []).map((a) => {
-    const title = [
+  const filteredAppointments = (appointments || []).filter((a) => {
+    if (!resourceFilter) return true
+    return String(a.resource_id) === resourceFilter
+  })
+
+  const events = filteredAppointments.map((a) => {
+    const parts = [
       a.patient_name ?? `Paciente #${a.patient_id}`,
       a.procedure_description ?? a.notes,
-    ].filter(Boolean).join(' — ')
+    ].filter(Boolean)
+    if (a.resource_name) parts.push(`[${a.resource_name}]`)
+    const title = parts.join(' — ')
 
     return {
       id: a.id,
@@ -340,16 +376,30 @@ export default function SchedulePage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Agenda de Citas</h1>
           <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
-            {appointments?.length ?? 0} citas programadas
+            {filteredAppointments.length} citas{resourceFilter ? ' (filtradas)' : ''} programadas
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva Cita
-        </button>
+        <div className="flex items-center gap-3">
+          {resources && resources.length > 0 && (
+            <select
+              value={resourceFilter}
+              onChange={(e) => setResourceFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 outline-none"
+            >
+              <option value="">Todos los equipos</option>
+              {resources.map((r) => (
+                <option key={r.id} value={String(r.id)}>{r.name} ({r.modality || r.resource_type})</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva Cita
+          </button>
+        </div>
       </div>
 
       {/* Calendar */}
@@ -440,15 +490,26 @@ export default function SchedulePage() {
               </div>
 
               {/* Resource */}
-              {resources && resources.length > 0 && (
-                <div>
-                  <label className={labelClass}>Sala / Equipo (opcional)</label>
-                  <select {...register('resource_id', { valueAsNumber: true })} className={inputClass}>
-                    <option value="">Sin asignar</option>
-                    {resources.map((r) => (
-                      <option key={r.id} value={r.id}>{r.name} ({r.modality || r.resource_type})</option>
-                    ))}
-                  </select>
+              <div>
+                <label className={labelClass}>Sala / Equipo (opcional)</label>
+                <select {...register('resource_id', { valueAsNumber: true })} className={inputClass}>
+                  <option value="">Sin asignar</option>
+                  {(resources || []).map((r) => (
+                    <option key={r.id} value={r.id}>{r.name} ({r.modality || r.resource_type})</option>
+                  ))}
+                </select>
+                {(!resources || resources.length === 0) && (
+                  <p className="text-gray-400 dark:text-slate-500 text-xs mt-1">
+                    No hay equipos registrados. Agregue equipos desde Administración.
+                  </p>
+                )}
+              </div>
+
+              {/* Operating hours info */}
+              {selectedResource && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+                  <span className="font-semibold">{selectedResource.name}</span> — Horario de operación: {selectedResource.operating_start_hour}:00 - {selectedResource.operating_end_hour}:00
+                  {selectedResource.operating_start_hour === 0 && selectedResource.operating_end_hour === 24 && ' (24 horas)'}
                 </div>
               )}
 

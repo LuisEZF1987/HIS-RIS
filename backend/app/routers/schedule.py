@@ -76,11 +76,12 @@ async def list_appointments(
     svc = ScheduleService(db)
     appts = await svc.list_appointments(patient_id, resource_id, date_from, date_to)
 
-    # Enrich with patient name and order description
+    # Enrich with patient name, order description, and resource name
     results = []
     for a in appts:
         patient_name: Optional[str] = None
         procedure_description: Optional[str] = None
+        resource_name: Optional[str] = None
 
         if a.patient_id:
             p_result = await db.execute(select(Patient).where(Patient.id == a.patient_id))
@@ -93,6 +94,12 @@ async def list_appointments(
             order = o_result.scalar_one_or_none()
             if order:
                 procedure_description = order.procedure_description
+
+        if a.resource_id:
+            r_result = await db.execute(select(Resource).where(Resource.id == a.resource_id))
+            resource = r_result.scalar_one_or_none()
+            if resource:
+                resource_name = resource.name
 
         response = AppointmentResponse(
             id=a.id,
@@ -107,6 +114,7 @@ async def list_appointments(
             created_at=a.created_at,
             patient_name=patient_name,
             procedure_description=procedure_description,
+            resource_name=resource_name,
         )
         results.append(response)
 

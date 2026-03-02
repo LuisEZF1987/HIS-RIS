@@ -47,6 +47,7 @@ export interface Patient {
   dni?: string
   blood_type?: BloodType
   allergies?: string
+  notes?: string
   is_active: boolean
   contacts: PatientContact[]
   created_at: string
@@ -202,6 +203,8 @@ export interface Resource {
   ae_title?: string
   location?: string
   is_available: boolean
+  operating_start_hour: number
+  operating_end_hour: number
   created_at: string
 }
 
@@ -218,6 +221,7 @@ export interface Appointment {
   created_at: string
   patient_name?: string
   procedure_description?: string
+  resource_name?: string
 }
 
 export interface TimeSlot {

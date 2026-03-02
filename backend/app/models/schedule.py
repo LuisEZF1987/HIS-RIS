@@ -43,6 +43,8 @@ class Resource(Base):
     description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
     capacity: Mapped[int] = mapped_column(Integer, default=1)
+    operating_start_hour: Mapped[int] = mapped_column(Integer, default=0, nullable=False, comment="Start of operating hours (0-23)")
+    operating_end_hour: Mapped[int] = mapped_column(Integer, default=24, nullable=False, comment="End of operating hours (1-24)")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     appointments: Mapped[List["Appointment"]] = relationship("Appointment", back_populates="resource")

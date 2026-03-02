@@ -11,6 +11,7 @@ export interface CreateOrderData {
   priority?: string
   clinical_indication?: string
   scheduled_at?: string
+  resource_id?: number
 }
 
 export interface EditOrderData {

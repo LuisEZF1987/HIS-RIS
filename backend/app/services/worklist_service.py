@@ -19,7 +19,10 @@ class WorklistService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_worklist_entry(self, order: ImagingOrder, patient: Patient) -> DicomWorklistEntry:
+    async def create_worklist_entry(
+        self, order: ImagingOrder, patient: Patient,
+        ae_title: Optional[str] = None, station_name: Optional[str] = None,
+    ) -> DicomWorklistEntry:
         dob_str = patient.date_of_birth.strftime("%Y%m%d") if patient.date_of_birth else None
         sex_str = patient.gender.value if patient.gender else None
 
@@ -40,6 +43,8 @@ class WorklistService:
             procedure_description=order.procedure_description,
             procedure_code=order.procedure_code,
             requested_procedure_id=order.accession_number,
+            scheduled_station_ae_title=ae_title,
+            scheduled_station_name=station_name,
             status=WorklistStatus.active,
         )
         self.db.add(entry)

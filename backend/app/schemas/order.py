@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.order import Modality, OrderPriority, OrderStatus
 
@@ -20,6 +20,18 @@ class ImagingOrderCreate(BaseModel):
     clinical_indication: Optional[str] = None
     special_instructions: Optional[str] = None
     scheduled_at: Optional[datetime] = None
+    resource_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def validate_scheduled_at(self):
+        if self.scheduled_at:
+            now = datetime.now(timezone.utc)
+            dt = self.scheduled_at
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt < now:
+                raise ValueError("No se puede programar una orden en una fecha/hora pasada")
+        return self
 
 
 class ImagingOrderUpdate(BaseModel):

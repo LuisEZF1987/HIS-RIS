@@ -43,6 +43,8 @@ export default function WorklistPage() {
       toast.success(`Estudio simulado vinculado a orden ${accession}`)
       queryClient.invalidateQueries({ queryKey: ['worklist'] })
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['studies'] })
+      queryClient.invalidateQueries({ queryKey: ['reports'] })
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Error al simular llegada del estudio')
     } finally {
@@ -93,7 +95,7 @@ export default function WorklistPage() {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-700">
               <tr>
-                {['Nº Acceso', 'Paciente', 'ID DICOM', 'Modalidad', 'Procedimiento', 'Programado', 'AE Title', 'Acción'].map((h) => (
+                {['Nº Acceso', 'Paciente', 'Cédula', 'Modalidad', 'Procedimiento', 'Programado', 'AE Title', 'Acción'].map((h) => (
                   <th key={h} className="text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-4 py-3">{h}</th>
                 ))}
               </tr>
