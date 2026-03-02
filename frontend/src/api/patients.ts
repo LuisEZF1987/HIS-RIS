@@ -32,4 +32,16 @@ export const patientsApi = {
 
   deactivate: (id: number) =>
     apiClient.delete(`/patients/${id}`),
+
+  timeline: (id: number) =>
+    apiClient.get<Array<{
+      type: 'order' | 'study' | 'report'
+      date: string
+      title: string
+      detail: string
+      status: string
+      order_id?: number
+      study_id?: number
+      report_id?: number
+    }>>(`/patients/${id}/timeline`).then((r) => r.data),
 }

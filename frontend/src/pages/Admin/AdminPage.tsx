@@ -7,8 +7,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { UserPlus, Users, ShieldCheck, Monitor, Plus, Pencil, ToggleLeft, ToggleRight, X } from 'lucide-react'
+import { UserPlus, Users, ShieldCheck, Monitor, Plus, Pencil, ToggleLeft, ToggleRight, X, Settings, FlaskConical, FileStack, Trash2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import { templatesApi, ReportTemplate } from '@/api/templates'
 
 const schema = z.object({
   username: z.string().min(3),
@@ -58,10 +59,57 @@ interface AuditEntry {
 
 export default function AdminPage() {
   const queryClient = useQueryClient()
-  const [tab, setTab] = useState<'users' | 'resources' | 'audit'>('users')
+  const [tab, setTab] = useState<'users' | 'resources' | 'templates' | 'audit' | 'settings'>('users')
   const [showForm, setShowForm] = useState(false)
   const [showResourceForm, setShowResourceForm] = useState(false)
   const [editingResource, setEditingResource] = useState<Resource | null>(null)
+  const [showTemplateForm, setShowTemplateForm] = useState(false)
+
+  const { data: templates } = useQuery({
+    queryKey: ['admin-templates'],
+    queryFn: () => templatesApi.list({ active_only: false }),
+    enabled: tab === 'templates',
+  })
+
+  const createTemplateMutation = useMutation({
+    mutationFn: (data: { name: string; modality?: string; technique?: string; findings?: string; impression?: string; recommendation?: string }) =>
+      templatesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-templates'] })
+      toast.success('Plantilla creada')
+      setShowTemplateForm(false)
+    },
+    onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al crear'),
+  })
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id: number) => templatesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-templates'] })
+      toast.success('Plantilla eliminada')
+    },
+    onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al eliminar'),
+  })
+
+  const toggleTemplateMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
+      templatesApi.update(id, { is_active }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-templates'] })
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
+    },
+  })
+
+  const [simulatorEnabled, setSimulatorEnabled] = useState(() =>
+    localStorage.getItem('his_ris_simulator_enabled') !== 'false'
+  )
+
+  const toggleSimulator = () => {
+    const newValue = !simulatorEnabled
+    setSimulatorEnabled(newValue)
+    localStorage.setItem('his_ris_simulator_enabled', String(newValue))
+    toast.success(newValue ? 'Simulador habilitado' : 'Simulador deshabilitado')
+  }
 
   const { data: users } = useQuery({
     queryKey: ['admin-users'],
@@ -153,8 +201,19 @@ export default function AdminPage() {
     onError: (err: any) => toast.error(err.response?.data?.detail || 'Error al actualizar'),
   })
 
-  const toggleAvailability = (r: Resource) => {
-    updateResourceMutation.mutate({ id: r.id, data: { is_available: !r.is_available } })
+  const [togglingId, setTogglingId] = useState<number | null>(null)
+
+  const toggleAvailability = async (r: Resource) => {
+    setTogglingId(r.id)
+    try {
+      await scheduleApi.updateResource(r.id, { is_available: !r.is_available })
+      queryClient.invalidateQueries({ queryKey: ['resources'] })
+      toast.success(`${r.name}: ${r.is_available ? 'Deshabilitado' : 'Habilitado'}`)
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Error al actualizar')
+    } finally {
+      setTogglingId(null)
+    }
   }
 
   const tabBtn = (id: typeof tab, label: string, Icon: any) => (
@@ -195,13 +254,24 @@ export default function AdminPage() {
             Nuevo Equipo / Sala
           </button>
         )}
+        {tab === 'templates' && (
+          <button
+            onClick={() => setShowTemplateForm(!showTemplateForm)}
+            className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva Plantilla
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 p-1 rounded-lg w-fit">
         {tabBtn('users', 'Usuarios', Users)}
         {tabBtn('resources', 'Equipos', Monitor)}
+        {tabBtn('templates', 'Plantillas', FileStack)}
         {tabBtn('audit', 'Auditoría', ShieldCheck)}
+        {tabBtn('settings', 'Configuración', Settings)}
       </div>
 
       {/* ── Users tab ── */}
@@ -406,11 +476,13 @@ export default function AdminPage() {
                           </button>
                           <button
                             onClick={() => toggleAvailability(r)}
-                            disabled={updateResourceMutation.isPending}
-                            className={`p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 ${r.is_available ? 'text-green-600 dark:text-green-400 hover:text-red-600 dark:hover:text-red-400' : 'text-red-500 dark:text-red-400 hover:text-green-600 dark:hover:text-green-400'}`}
+                            disabled={togglingId === r.id}
+                            className={`p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 disabled:opacity-50 ${r.is_available ? 'text-green-600 dark:text-green-400 hover:text-red-600 dark:hover:text-red-400' : 'text-red-500 dark:text-red-400 hover:text-green-600 dark:hover:text-green-400'}`}
                             title={r.is_available ? 'Deshabilitar' : 'Habilitar'}
                           >
-                            {r.is_available ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                            {togglingId === r.id ? (
+                              <span className="w-5 h-5 block border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : r.is_available ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                           </button>
                         </div>
                       </td>
@@ -504,6 +576,126 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ── Templates tab ── */}
+      {tab === 'templates' && (
+        <>
+          {showTemplateForm && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const fd = new FormData(e.currentTarget)
+                createTemplateMutation.mutate({
+                  name: fd.get('name') as string,
+                  modality: (fd.get('modality') as string) || undefined,
+                  technique: (fd.get('technique') as string) || undefined,
+                  findings: (fd.get('findings') as string) || undefined,
+                  impression: (fd.get('impression') as string) || undefined,
+                  recommendation: (fd.get('recommendation') as string) || undefined,
+                })
+              }}
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 space-y-4"
+            >
+              <h2 className="font-semibold text-gray-900 dark:text-white">Nueva Plantilla de Informe</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Nombre *</label>
+                  <input name="name" required className={inputClass} placeholder="Ej: TC Cráneo Normal" />
+                </div>
+                <div>
+                  <label className={labelClass}>Modalidad</label>
+                  <select name="modality" className={inputClass}>
+                    <option value="">— Todas —</option>
+                    {['CR','CT','MR','US','NM','DX','MG','XA','RF','OT'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Técnica</label>
+                <textarea name="technique" className={inputClass} rows={2} placeholder="Descripción de la técnica..." />
+              </div>
+              <div>
+                <label className={labelClass}>Hallazgos</label>
+                <textarea name="findings" className={inputClass} rows={3} placeholder="Plantilla de hallazgos..." />
+              </div>
+              <div>
+                <label className={labelClass}>Impresión</label>
+                <textarea name="impression" className={inputClass} rows={2} placeholder="Plantilla de impresión diagnóstica..." />
+              </div>
+              <div>
+                <label className={labelClass}>Recomendaciones</label>
+                <textarea name="recommendation" className={inputClass} rows={2} placeholder="Plantilla de recomendaciones..." />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowTemplateForm(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-700">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={createTemplateMutation.isPending}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 disabled:opacity-50">
+                  {createTemplateMutation.isPending ? 'Creando...' : 'Crear Plantilla'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+            {!templates?.length ? (
+              <div className="p-8 text-center text-gray-500 dark:text-slate-400">
+                <FileStack className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-slate-600" />
+                <p>No hay plantillas de informe</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-slate-900/50 border-b dark:border-slate-700">
+                  <tr>
+                    {['Nombre', 'Modalidad', 'Estado', 'Acciones'].map((h) => (
+                      <th key={h} className="text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-4 py-3">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-slate-700">
+                  {templates.map((t) => (
+                    <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-slate-100">{t.name}</td>
+                      <td className="px-4 py-3">
+                        {t.modality ? (
+                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold px-2 py-1 rounded">{t.modality}</span>
+                        ) : <span className="text-gray-400 dark:text-slate-500 text-sm">Todas</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${t.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                          {t.is_active ? 'Activa' : 'Inactiva'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleTemplateMutation.mutate({ id: t.id, is_active: !t.is_active })}
+                            className={`p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 ${t.is_active ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}
+                            title={t.is_active ? 'Desactivar' : 'Activar'}
+                          >
+                            {t.is_active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                          </button>
+                          <button
+                            onClick={() => { if (confirm('¿Eliminar esta plantilla?')) deleteTemplateMutation.mutate(t.id) }}
+                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
+      )}
+
       {/* ── Audit tab ── */}
       {tab === 'audit' && (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
@@ -553,6 +745,45 @@ export default function AdminPage() {
               </tbody>
             </table>
           )}
+        </div>
+      )}
+
+      {/* ── Settings tab ── */}
+      {tab === 'settings' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
+            <h2 className="font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+              Modo Desarrollo
+            </h2>
+
+            <div className="flex items-center justify-between py-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                  <FlaskConical className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Simulador de Estudios DICOM</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    Muestra el botón "Simular" en la Worklist para probar el flujo sin equipo físico
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={toggleSimulator}
+                className={`p-1.5 rounded-lg transition-colors ${simulatorEnabled ? 'text-green-600 dark:text-green-400 hover:text-red-600 dark:hover:text-red-400' : 'text-red-500 dark:text-red-400 hover:text-green-600 dark:hover:text-green-400'}`}
+                title={simulatorEnabled ? 'Deshabilitar simulador' : 'Habilitar simulador'}
+              >
+                {simulatorEnabled ? <ToggleRight className="w-7 h-7" /> : <ToggleLeft className="w-7 h-7" />}
+              </button>
+            </div>
+
+            <div className={`mt-2 rounded-lg px-3 py-2 text-xs ${simulatorEnabled ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800'}`}>
+              Estado: <strong>{simulatorEnabled ? 'Habilitado' : 'Deshabilitado'}</strong>
+              {simulatorEnabled
+                ? ' — La columna "Acción" y el botón "Simular" son visibles en la Worklist.'
+                : ' — El botón de simulación está oculto en la Worklist.'}
+            </div>
+          </div>
         </div>
       )}
     </div>

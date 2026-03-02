@@ -13,3 +13,5 @@ from app.models.schedule import Appointment, Resource  # noqa: F401
 from app.models.worklist import DicomWorklistEntry  # noqa: F401
 from app.models.hl7_message import HL7Message  # noqa: F401
 from app.models.audit import AuditLog  # noqa: F401
+from app.models.template import ReportTemplate  # noqa: F401
+from app.models.notification import Notification  # noqa: F401

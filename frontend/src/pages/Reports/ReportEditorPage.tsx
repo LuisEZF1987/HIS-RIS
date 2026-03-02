@@ -6,6 +6,8 @@ import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 import { Save, FileSignature, Download, X, ShieldCheck, Lock } from 'lucide-react'
 import { useState } from 'react'
+import TemplateSelector from '@/components/TemplateSelector'
+import type { ReportTemplate } from '@/api/templates'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -31,7 +33,7 @@ export default function ReportEditorPage() {
     enabled: !!id,
   })
 
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, setValue } = useForm({
     values: report ? {
       findings: report.findings || '',
       impression: report.impression || '',
@@ -76,6 +78,13 @@ export default function ReportEditorPage() {
     }
   }
 
+  const applyTemplate = (tpl: ReportTemplate) => {
+    if (tpl.technique) setValue('technique', tpl.technique)
+    if (tpl.findings) setValue('findings', tpl.findings)
+    if (tpl.impression) setValue('impression', tpl.impression)
+    if (tpl.recommendation) setValue('recommendation', tpl.recommendation)
+  }
+
   const isSigned = report?.status === 'final'
 
   if (isLoading) {
@@ -100,7 +109,8 @@ export default function ReportEditorPage() {
             </span>
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          {!isSigned && <TemplateSelector onSelect={applyTemplate} />}
           {isSigned && (
             <button
               onClick={downloadPdf}

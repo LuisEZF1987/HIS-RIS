@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { patientsApi } from '@/api/patients'
 import { ordersApi } from '@/api/orders'
-import { ArrowLeft, Phone, Mail, ClipboardList, Plus } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, ClipboardList, Plus, Clock } from 'lucide-react'
 import { format, parseISO, differenceInYears } from 'date-fns'
 import { es } from 'date-fns/locale'
+import PatientTimeline from '@/components/PatientTimeline'
 
 const statusColors: Record<string, string> = {
   REQUESTED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -18,6 +20,7 @@ const cardClass = 'bg-white dark:bg-slate-800 rounded-xl shadow-sm border border
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const [tab, setTab] = useState<'orders' | 'timeline'>('orders')
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ['patient', id],
@@ -113,35 +116,61 @@ export default function PatientDetailPage() {
           )}
         </div>
 
-        {/* Orders */}
+        {/* Orders / Timeline tabs */}
         <div className={`md:col-span-2 ${cardClass}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900 dark:text-white">Órdenes de Imagen</h2>
-            <ClipboardList className="w-5 h-5 text-gray-400 dark:text-slate-500" />
+          <div className="flex items-center gap-4 mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
+            <button
+              onClick={() => setTab('orders')}
+              className={`flex items-center gap-2 text-sm font-medium pb-1 border-b-2 transition-colors ${
+                tab === 'orders'
+                  ? 'border-primary-600 text-primary-600 dark:border-blue-400 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <ClipboardList className="w-4 h-4" />
+              Órdenes
+            </button>
+            <button
+              onClick={() => setTab('timeline')}
+              className={`flex items-center gap-2 text-sm font-medium pb-1 border-b-2 transition-colors ${
+                tab === 'timeline'
+                  ? 'border-primary-600 text-primary-600 dark:border-blue-400 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              Historial
+            </button>
           </div>
 
-          {!ordersData?.items.length ? (
-            <div className="text-center py-8 text-gray-500 dark:text-slate-400">
-              <ClipboardList className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-slate-600" />
-              <p className="text-sm">No hay órdenes para este paciente</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {ordersData.items.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{order.procedure_description}</p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">
-                      {order.accession_number} · {order.modality} · {format(parseISO(order.requested_at), 'dd/MM/yyyy')}
-                    </p>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'}`}>
-                    {order.status}
-                  </span>
+          {tab === 'orders' && (
+            <>
+              {!ordersData?.items.length ? (
+                <div className="text-center py-8 text-gray-500 dark:text-slate-400">
+                  <ClipboardList className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-slate-600" />
+                  <p className="text-sm">No hay órdenes para este paciente</p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-3">
+                  {ordersData.items.map((order) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{order.procedure_description}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          {order.accession_number} · {order.modality} · {format(parseISO(order.requested_at), 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
+
+          {tab === 'timeline' && <PatientTimeline patientId={Number(id)} />}
         </div>
       </div>
     </div>

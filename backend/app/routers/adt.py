@@ -13,6 +13,9 @@ from app.schemas.patient import (
 from app.services.patient_service import PatientService
 from app.services.hl7_service import HL7Service
 from app.models.encounter import Encounter, EncounterStatus
+from app.models.order import ImagingOrder
+from app.models.study import ImagingStudy
+from app.models.report import RadiologyReport
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
@@ -66,6 +69,62 @@ async def update_patient(patient_id: int, data: PatientUpdate, db: DBSession, cu
 async def deactivate_patient(patient_id: int, db: DBSession, current_user: CurrentUser):
     svc = PatientService(db)
     await svc.deactivate(patient_id)
+
+
+# ── Patient Timeline ──────────────────────────────────────────────────────────
+
+@router.get("/patients/{patient_id}/timeline",
+            dependencies=[require_permission("patients:read")])
+async def patient_timeline(patient_id: int, db: DBSession):
+    """Return chronological timeline events for a patient."""
+    svc = PatientService(db)
+    await svc.get_by_id(patient_id)  # validate exists
+
+    stmt = (
+        select(ImagingOrder)
+        .where(ImagingOrder.patient_id == patient_id)
+        .options(
+            selectinload(ImagingOrder.study).selectinload(ImagingStudy.report),
+        )
+        .order_by(ImagingOrder.created_at.desc())
+    )
+    result = await db.execute(stmt)
+    orders = result.scalars().all()
+
+    events = []
+    for o in orders:
+        events.append({
+            "type": "order",
+            "date": o.created_at.isoformat(),
+            "title": f"Orden: {o.procedure_description}",
+            "detail": f"{o.modality.value} · {o.accession_number}",
+            "status": o.status.value,
+            "order_id": o.id,
+        })
+        if o.study:
+            s = o.study
+            if s.received_at:
+                events.append({
+                    "type": "study",
+                    "date": s.received_at.isoformat(),
+                    "title": f"Estudio recibido: {s.study_description or o.procedure_description}",
+                    "detail": f"{s.modality or o.modality.value} · {s.series_count} series",
+                    "status": s.status.value,
+                    "study_id": s.id,
+                })
+            if s.report:
+                r = s.report
+                events.append({
+                    "type": "report",
+                    "date": (r.signed_at or r.created_at).isoformat(),
+                    "title": f"Informe: {o.procedure_description}",
+                    "detail": f"Estado: {r.status.value}" + (f" · Firmado por {r.signed_by}" if r.signed_by else ""),
+                    "status": r.status.value,
+                    "report_id": r.id,
+                })
+
+    events.sort(key=lambda e: e["date"], reverse=True)
+    return events
 
 
 # ── Encounters ────────────────────────────────────────────────────────────────
