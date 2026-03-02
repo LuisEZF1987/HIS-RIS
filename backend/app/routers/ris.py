@@ -28,6 +28,20 @@ async def create_order(data: ImagingOrderCreate, db: DBSession, current_user: Cu
     svc = OrderService(db)
     order = await svc.create_order(data, current_user.id)
 
+    # Notify technicians about new order
+    try:
+        from app.services.notification_service import NotificationService
+        from app.models.user import UserRole
+        n_svc = NotificationService(db)
+        await n_svc.notify_role(
+            UserRole.technician, "order_created",
+            f"Nueva orden: {order.procedure_description}",
+            body=f"Modalidad: {order.modality.value} · Accession: {order.accession_number}",
+            link=f"/worklist",
+        )
+    except Exception:
+        pass
+
     # Send HL7 ORM O01
     from app.services.hl7_service import HL7Service
     from app.services.patient_service import PatientService

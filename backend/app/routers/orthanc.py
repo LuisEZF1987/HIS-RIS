@@ -111,6 +111,22 @@ async def orthanc_study_webhook(
         await wl_svc.complete_worklist_entry(accession_number)
 
     await db.flush()
+
+    # Notify radiologists about new study
+    try:
+        from app.services.notification_service import NotificationService
+        from app.models.user import UserRole
+        n_svc = NotificationService(db)
+        desc = main_tags.get("StudyDescription", "Sin descripción")
+        await n_svc.notify_role(
+            UserRole.radiologist, "study_received",
+            f"Estudio recibido: {desc}",
+            body=f"Modalidad: {main_tags.get('Modality', 'N/A')} · Accession: {accession_number or 'N/A'}",
+            link=f"/worklist",
+        )
+    except Exception:
+        pass
+
     logger.info(f"Study {study_uid} linked to order {order.id if order else 'N/A'}")
     return {"status": "created", "study_id": study.id}
 

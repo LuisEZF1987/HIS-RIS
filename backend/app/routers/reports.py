@@ -83,6 +83,20 @@ async def sign_report(report_id: int, data: ReportSignRequest, db: DBSession, cu
     svc = ReportService(db)
     report = await svc.sign_report(report_id, data.password, current_user)
 
+    # Notify physicians about signed report
+    try:
+        from app.services.notification_service import NotificationService
+        from app.models.user import UserRole
+        n_svc = NotificationService(db)
+        await n_svc.notify_role(
+            UserRole.physician, "report_signed",
+            f"Informe firmado por {current_user.full_name}",
+            body=f"Informe #{report.id} firmado digitalmente",
+            link=f"/reports/{report.id}",
+        )
+    except Exception:
+        pass
+
     # Send HL7 ORU R01 after signing
     from app.services.hl7_service import HL7Service
     from app.services.patient_service import PatientService
