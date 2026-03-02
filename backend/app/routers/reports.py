@@ -49,7 +49,7 @@ async def list_reports(db: DBSession, status: str = Query(None)):
             created_at=r.created_at,
             updated_at=r.updated_at,
             accession_number=order.accession_number if order else None,
-            modality=study.modality or (order.modality.value if order else None),
+            modality=(order.modality.value if order else None) or (study.modality if study else None),
             patient_name=patient.full_name if patient else None,
             patient_mrn=patient.mrn if patient else None,
         ))
